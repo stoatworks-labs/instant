@@ -7,12 +7,13 @@
 > density on a flat patch follows its first-order law with the stated time constant,
 > fitted without knowing the asymptote; at the stated early time the cyan layer leads
 > and the print then moves only toward neutral, reaching it at the stop; the time
-> constants at 14 and 34 °C stand in the ratio the Arrhenius law gives, for every dye
-> layer and for the timing layer; each row of the print starts developing at its
+> constants at 14 and 34 °C stand in the ratio the Arrhenius law gives, for each dye
+> layer at its own activation energy and for the timing layer; a neutral grey comes out
+> green when cold, neutral at 24 °C and warm when hot; each row of the print starts developing at its
 > distance from the pod edge over the front's speed; the dirty roller's mark repeats
 > at exactly its circumference, whole-pixel and fractional; after a Take the print
 > develops from the captured frame however the clip changes, and a resize keeps it;
-> and the camera's meter prints two levels alike — with eight negative controls that
+> and the camera's meter prints two levels alike — with nine negative controls that
 > prove each check can fail. It has **never been loaded into Resolume**; it is loaded
 > by [oxbow](https://github.com/stoatworks-labs/oxbow), which is a real FFGL host and
 > is not Resolume. See [Status](#status).
@@ -88,12 +89,11 @@ None of these is drawn. Each is one stage of the print doing what it does:
   200 s. Four minutes in, a neutral grey reads density R 0.67, G 0.60, B 0.51.
 - **The dark green-grey start** is the opacifier, clearing with its own time constant.
 - **Temperature changes the picture, not only the speed.** Every rate follows the
-  Arrhenius law, with an activation energy fitted to a published development
-  time/temperature chart. The timing layer that ends development speeds up less than
-  the dyes do, so cold film stops before the yellow has arrived — cyan, pale, low
-  contrast — and hot film finishes — warm. The manufacturer's support page describes
-  the cold print as light and low in contrast, as here, but with a *green* tint where
-  this model gives a cyan one; the hot print's yellow/red it matches.
+  Arrhenius law, and each dye layer has its own activation energy. The timing layer
+  that ends development speeds up less than the dyes do, so cold film stops short —
+  pale, low in contrast, and **green**, because magenta slows the most and is cut
+  shortest — and hot film finishes, with the slow yellow over-reaching: warm, yellow-red.
+  That is what the manufacturer's support page says of cold and hot prints.
 - **The print develops bottom-first**, from the pod edge, at the front's speed. The
   harness measures it row by row; the eye cannot see it at any `Speed`, because the front
   crosses the frame in one film-second and the picture takes a minute to come through.
@@ -106,9 +106,12 @@ None of these is drawn. Each is one stage of the print doing what it does:
 ### The honest limit
 
 Most of the chemistry's numbers are assumptions, and the plugin says so beside each
-one. The activation energy is fitted from ILFORD's chart for black-and-white silver
-development, and applying it to dye development is itself an assumption. The timing
-layer's is taken as half of it, with no source. The dye time constants, the stop and
+one. The yellow layer's activation energy is fitted from ILFORD's chart for
+black-and-white silver development, and applying it to dye development is itself an
+assumption. **The cyan and magenta layers' (103.6 and 106.85 kJ/mol) are fitted to the
+manufacturer's description of a cold print** — a green tint — not to any measurement:
+no published per-layer figure was found. The timing layer's is taken as half the
+chart's, with no source. The dye time constants, the stop and
 the opacifier are chosen to land inside the manufacturer's stated 10–15 minutes and
 the order the process is known for. None of them was measured from a real print. Each
 dye absorbs only its own channel, and the spread is a straight front with a stated
@@ -132,7 +135,9 @@ below; set Border to 0 for the process full-frame.
 
 ## Status
 
-**v0.1.0, released 25 September 2026, and honestly early.** There is a
+**v0.1.1, released 25 September 2026, and honestly early.** v0.1.1 turns the cold
+print's cast from cyan to green, as the manufacturer describes it, by giving each dye
+layer its own activation energy; v0.1.0 came out the same day. There is a
 [user guide](https://stoatworks-labs.com/software/instant/guide/)
 ([PDF](docs/USER-GUIDE.pdf)) and a [project page](https://stoatworks-labs.com/software/instant/).
 
@@ -146,24 +151,26 @@ and again at 320×180 on Apple's software renderer. In numbers:
 | --- | --- |
 | `--develop` | cyan, magenta, yellow τ **70.0000, 120.0004, 200.0016 s** against 70, 120, 200; every successive difference on its first-order line; black-and-white 90.0000 s; the opacifier 44.9997 s against 45 |
 | `--order` | at 240 s density R 0.676 > G 0.607 > B 0.516, a blue-cyan print; the balance falls on all 46 steps after, to **3e-7** past the stop |
-| `--arrhenius` | τ(14 °C) / τ(34 °C) **6.28707–6.28716** for the three dyes against 6.28703 at the fitted 67.41 kJ/mol; the opacifier 2.50736 against 2.50739 |
+| `--arrhenius` | τ(14 °C) / τ(34 °C) for each dye at its own activation energy: cyan **16.8696** against 16.8695 at 103.6 kJ/mol, magenta **18.4332** against 18.4330 at 106.85, yellow **6.2871** against 6.2870 at 67.41; the opacifier 2.50736 against 2.50739 |
+| `--cast` | a neutral grey after the stop, out of the picture: at 4, 6 and 12 °C **green**, G above R by 0.15, 0.15, 0.11 and above B by 0.18, 0.15, 0.06 in density (margin 0.02); at 24 °C neutral to **1e-7**; at 30, 34 and 36 °C **warm**, R above B by 0.022, 0.029, 0.031 (margin 0.02) |
 | `--front` | every row began developing at distance / front speed to **4.5e-6 s** (tolerance 6.8e-5); the speed out of the picture 1.000001 image heights / s |
 | `--roller` | whole-pixel (55 and 225 px): the print translates onto itself **exactly** one circumference on; fractional (56.25 and 226.25 px): mark centroids within 0.028 px of stated (bound 1/(8w) = 0.097) |
 | `--take` | the print is identical whether or not the clip changes after the take; resized to 1.5× and back mid-development, the same to **2e-7** |
 | `--meter` | two patch levels print the same to 6e-8, at the stated density of metered mid grey; one past the camera's +3 stops prints darker, as stated |
-| `--negative` | eight perturbed models — one τ for all layers, the front everywhere at once, no temperature law, cyan's τ × 1.1, the roller 2% large, a resize that clears, a capture that follows the clip, no meter — each **fails** its check |
-| mutation | one character of the shipped GLSL (`StopDose - dose.y` → `StopDose + dose.y`: development never stops) was caught by `--order` and `--meter`, then reverted |
+| `--negative` | nine perturbed models — one τ for all layers, the front everywhere at once, no temperature law, cyan's τ × 1.1, the roller 2% large, a resize that clears, a capture that follows the clip, no meter, and v0.1.0's one activation energy for every dye (which prints the cold grey blue-cyan) — each **fails** its check |
+| mutation | v0.1.0: one character of the shipped GLSL (`StopDose - dose.y` → `StopDose + dose.y`: development never stops) was caught by `--order` and `--meter`. v0.1.1: `dose.xyz` → `dose.xxz` in the print pass (magenta developing on cyan's dose) was caught by `--arrhenius` alone. Both reverted |
 | `tools/sweep.py` | all **12** controls measurably change the picture (Take under Take mode) |
 | shaders | all six stages, as the plugin assembles them, compile through `glslc`; no GLSL 4.10 reserved word as an identifier |
-| activation energy | refits from the chart's 40 cells to the committed 67410 J/mol |
+| activation energies | yellow's refits from the chart's 40 cells to the committed 67410 J/mol; cyan's and magenta's refit from the cold-green conditions to the committed 103600 and 106850 |
 | `--pipe` | 2.5 frames in, exactly 2 out; an unknown cue refused; a closed stdout and a failed render exit 1; an option cue steps, an event cue fires on its frame |
 | the bundle | universal (`x86_64 arm64`), exports `plugMain`, ad-hoc signs; `oxbow` reports `SW Instant` / `IN01` / `effect` and renders 120 frames through `plugMain` |
 
 Render cost at the defaults, best of three runs of 60 frames after a warm-up,
-`glFinish` both sides, on a GPU shared with other work: **0.05 ms** at 720p,
-**0.07 ms** at 1080p, **0.37 ms** at 4K. State held across frames: the capture and two
-development buffers, 24 bytes a texel: **21 MB** at 720p, **47 MB** at 1080p,
-**190 MB** at 4K. macOS figures only.
+`glFinish` both sides, on a GPU shared with other work: **0.09 ms** at 720p,
+**0.16 ms** at 1080p, **0.64 ms** at 4K (v0.1.1; v0.1.0 measured 0.05, 0.07 and 0.37 on
+a quieter GPU). State held across frames: the capture and two development buffers,
+40 bytes a texel since v0.1.1 (three dye doses and the stop): **35 MB** at 720p,
+**79 MB** at 1080p, **316 MB** at 4K. macOS figures only.
 
 ### In Resolume Arena, on Windows
 
@@ -176,17 +183,32 @@ time at the Speed its caption states. It found that **the reagent front cannot b
 Speed (it crosses the frame in one film-second, and the picture takes a minute to come through
 the opacifier: at 1× the bottom of a flat grey leads the top by a level or two, less than the
 shine), so the video shows seven seconds of real time instead and makes no claim for the front.
-It also measured the casts on a mid grey after the stop: 6 °C prints (119, 128, 139), clearly
-blue-cyan; 34 °C prints (117, 116, 112), only slightly warm.
+It also measured the casts on a mid grey after the stop: 6 °C printed (119, 128, 139), clearly
+blue-cyan; 34 °C (117, 116, 112), only slightly warm. That cold cyan is what v0.1.1 changed; the
+video was not re-filmed: its 6 °C beat (at 0:29) still shows v0.1.0's cyan, and its caption
+says so.
 
-### The temperature source, re-read at release
+### The cold print is green, since v0.1.1
 
-The build session had the manufacturer's support page on temperature only through search
-summaries, which said a *cyan* tint in the cold. Read at release through the Internet
-Archive's copies (2023-02 and 2026-04), it says prints below 13 °C come out over-exposed,
-lacking colour contrast and **with a green tint**, and above 28 °C colour prints take a
-yellow/red tint. The model's cold print is light and flat as stated, but blue-cyan, not
-green. It was not changed; the guide says so. No number in the plugin comes from that page.
+The manufacturer's support page on temperature (read through the Internet Archive's copies of
+2023-02 and 2026-04) says prints below 13 °C come out over-exposed, lacking colour contrast and
+**with a green tint**, and above 28 °C colour prints take a yellow/red tint. v0.1.0 printed the
+cold grey blue-cyan: the build session had the page only through search summaries that said
+cyan. v0.1.1 gives each dye layer its own activation energy, so the cold slows magenta most, and
+the cold grey is green. Through the plugin, a flat mid grey at the defaults, printed at 256x,
+after the stop, 8-bit:
+
+| | v0.1.0 | v0.1.1 |
+| --- | --- | --- |
+| 4 °C | 124, 134, 146 | **151, 176, 146** |
+| 6 °C | 123, 131, 142 | **143, 167, 142** |
+| 14 °C | 121, 124, 129 | 124, 135, 129 |
+| 24 °C | 120, 120, 119 | 120, 120, 119 |
+| 34 °C | 120, 120, 116 | 120, 120, 116 |
+
+The page gives no numbers and no published per-layer figure was found, so the cyan and magenta
+activation energies are **fitted to its words** (`tools/cast_fit.py`): at 6 °C red equals blue,
+and the cast is as strong as v0.1.0's was. At 24 °C nothing changed.
 
 ### Not done
 
@@ -194,8 +216,8 @@ green. It was not changed; the guide says so. No number in the plugin comes from
   measured offline against the real plugin class in a headless CGL context, plus an `oxbow`
   load.
 - Seen only on Resolume's bundled demo clips through `intest --pipe`, never on camera footage.
-- The casts Temperature, Expired and Vintage produce are judged by eye; the checks measure
-  the rates behind them, not the casts.
+- `--cast` checks the hue of Temperature's casts on a neutral grey; how strong they are, and
+  the casts Expired and Vintage produce, are judged by eye.
 - No OpenFX port and no presets.
 
 ## Browser demo

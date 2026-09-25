@@ -13,7 +13,9 @@ Instant film developing in front of you, as an FFGL 2.1 effect (`IN01`, shown as
 macOS `.bundle` and a Windows `.dll`. MIT, public at
 [github.com/stoatworks-labs/instant](https://github.com/stoatworks-labs/instant), released
 at v0.1.0 on 2026-09-25 with a user guide, a site page, a browser demo and a video (see
-"The release, v0.1.0" at the end). Never loaded into Resolume on macOS.
+"The release, v0.1.0" at the end), and at **v0.1.1** the same evening: the cold cast turned
+green, as the manufacturer describes it, by per-layer activation energies (see "v0.1.1:
+the cold print goes green"). Never loaded into Resolume on macOS.
 
 Built 2026-09-25 in one session (tranche five, Allan's pick) from the fleet's
 templates and `specs/SPEC-instant.md`: wetplate for the plugin shape, the Take event,
@@ -35,7 +37,7 @@ arrives in a known order.** Not a grade that fades in: the process, stage by sta
 | a reagent front leaving the pod edge at a stated speed | **the print develops bottom-first**, by distance ÷ speed |
 | each dye layer first-order, cyan fastest, yellow slowest | **pale and blue-cyan first, warming** as magenta and yellow arrive |
 | an opacifier clearing with the timing layer | **a dark green-grey frame** that the picture comes up through |
-| the timing layer's pH drop ending development, with its own lower activation energy | **cold film stops short: cyan, pale, low contrast; hot film finishes: warm** |
+| the timing layer's pH drop ending development, with its own lower activation energy; each dye layer's own activation energy, magenta's the highest | **cold film stops short: green, pale, low contrast; hot film finishes: warm** |
 | too little paste, or paste dried with age | **dark corners** where the reagent never reached |
 | dirt on a roller | **a mark repeating at the roller's circumference** |
 
@@ -46,15 +48,15 @@ arrives in a known order.** Not a grade that fades in: the process, stage by sta
 2. **Meter** (at a Take only). The capture's BT.709 luminance over the image window
    onto a 64 × 64 R32F grid, averaged to one texel by its mip chain. Gain
    = 0.18 / mean, clamped to −2..+3 stops; `Exposure` (±2 stops) rides on top.
-3. **Develop** (every frame, per texel of the source raster). With A the dye dose and
-   S the stop dose (seconds at 24 °C):
+3. **Develop** (every frame, per texel of the source raster). With A_i the dye doses
+   (one per layer, since v0.1.1) and S the stop dose (seconds at 24 °C), in one RGBA32F texel:
    `overlap = the part of this frame's film-seconds after the front arrived at t0 = s / v`,
-   `S += k_stop overlap`, `A += k_dye overlap × (the fraction of it before S reached the stop)`,
-   k = exp(−Ea / R (1/T − 1/Tref)). First-order development is then exact in A,
+   `S += k_stop overlap`, `A_i += k_i overlap × (the fraction of it before S reached the stop)`,
+   k = exp(−Ea / R (1/T − 1/Tref)), each layer at its own Ea. First-order development is then exact in A,
    whatever the temperature did, and the stop is exact to the partial frame.
 4. **Print** (to the host). Layout (print, frame, square window, or full frame at
    Border 0); per layer `Dinf = Balance × depth × (Dmin + (Dmax − Dmin)(1 − c(log10 H)))`
-   with rebate's softplus coverage curve; `D = Dinf (1 − e^(−A/τ))`;
+   with rebate's softplus coverage curve; `D = Dinf (1 − e^(−A_i/τ_i))`;
    `O = O0 e^(−S/τop)`; reflectance `White × 10^(−(D + O))`, or the dark negative
    where the reagent never reached; the frame, a little texture and shine; sRGB; Mix.
 
@@ -67,11 +69,13 @@ cold and hot casts fall out rather than be painted on.
 - **The colour drift is not painted.** At 240 s a neutral grey reads density R 0.67,
   G 0.60, B 0.51 — a blue-cyan print — from the three time constants alone, and moves
   monotonically to neutral (3e-7) at the stop.
-- **Cold and hot casts are not painted.** They are two activation energies: the dye's
-  (fitted from a published chart) and the timing layer's (assumed half of it). At 6 °C
-  development ends with yellow at roughly 3/4 of its asymptote; at 34 °C all three
-  finish. Nothing measures the cast itself, only the rates (`--arrhenius`); the casts
-  were judged by eye on the demo clips.
+- **Cold and hot casts are not painted.** They are four activation energies: yellow's
+  (fitted from a published chart), cyan's and magenta's (fitted to the manufacturer's
+  words, see below) and the timing layer's (assumed half the chart's). At 6 °C
+  development ends with cyan and yellow at 0.75 of their balanced density and magenta at
+  0.53: green. At 34 °C all three finish and yellow over-reaches by 4%: warm. `--cast`
+  checks the hue of both and the neutral between out of the picture; the rates are
+  `--arrhenius`'s; the strength was judged by eye on the demo clips.
 - **Not modelled:** spectral dye curves and unwanted absorptions (each dye absorbs only
   its channel), interimage effects, the negative's own grain (sub-pixel at video
   rasters), a real fluid spread (the front is a line moving at one speed, the reach a
@@ -86,6 +90,7 @@ cold and hot casts fall out rather than be painted on.
 | File | What it is |
 | --- | --- |
 | `source/Model.h` | Every number, each marked as fitted, sourced or ASSUMED; the stocks; the `Perturb` and `Probe` hooks. |
+| `tools/cast_fit.py` | The cyan and magenta activation energies, fitted to the manufacturer's cold green; `--check` for verify. |
 | `source/Controls.{h,cpp}` | What a 0..1 slider means, with inverses; the print layout in millimetres; the Arrhenius factor. Exact positions land exactly in binary. |
 | `source/Shaders.{h,cpp}` | A constants block written from `Model.h`, the `kModel` GLSL library (sRGB, hashing, the spread, the curve) and the five pass bodies, assembled at run time. |
 | `source/PassBuffer.*` | tinsel's FFGLFBO with the leak fixed, plus wetplate's `Swap`. |
@@ -96,8 +101,9 @@ cold and hot casts fall out rather than be painted on.
 | `tools/sweep.py` | No control is silently dead. |
 | `tools/verify.sh` | All of it, at two rasters and on the software renderer, plus the release-time checks. |
 
-State held across frames: the capture (RGBA16F), two dose buffers (RG32F,
-ping-pong) — 24 bytes a texel — and the 64 × 64 meter. The capture and the current
+State held across frames: the capture (RGBA16F), two dose buffers (RGBA32F,
+ping-pong, since v0.1.1: three dye doses and the stop) — 40 bytes a texel — and the
+64 × 64 meter. The capture and the current
 dose buffer are resampled, not reallocated, on a resize.
 
 ---
@@ -108,8 +114,9 @@ Said plainly, because the brief asked for it and because most of them are choice
 
 | number | value | status |
 | --- | --- | --- |
-| dye activation energy | **67.41 kJ/mol** | **fitted** by `tools/arrhenius_fit.py` to 40 cells of ILFORD's film development time/temperature compensation chart (2002), standard error 0.62 kJ/mol. That chart is B&W silver development; using it for dye diffusion transfer is an **assumption**. |
-| timing-layer activation energy | 33.7 kJ/mol | **assumed**: half the dye figure (diffusion through a polymer, not a chemical step). No source. |
+| yellow dye (and B&W image) activation energy | **67.41 kJ/mol** | **fitted** by `tools/arrhenius_fit.py` to 40 cells of ILFORD's film development time/temperature compensation chart (2002), standard error 0.62 kJ/mol. That chart is B&W silver development; using it for dye diffusion transfer is an **assumption**. |
+| cyan, magenta dye activation energies | **103.6, 106.85 kJ/mol** | **fitted to a description** by `tools/cast_fit.py`: at 6 °C a mid grey comes out R = B (green, not cyan- or yellow-green) with a cast as strong as v0.1.0's (max − min of the balanced completions 0.2223). No published per-layer figure was found (2026-09-25). Rounded to 10 J/mol. |
+| timing-layer activation energy | 33.7 kJ/mol | **assumed**: half the chart's figure (diffusion through a polymer, not a chemical step). No source. |
 | dye τ at 24 °C (C, M, Y) | 70, 120, 200 s | **assumed**; ordered as the process is known to arrive (blue-cyan first, warming) and sized so the print is done in the 10–15 minutes Polaroid states for its colour film. |
 | B&W τ; vintage τ | 90 s; 90, 170, 230 s | **assumed**. |
 | opacifier τ | 45 s (stop-seconds) | **assumed**: the picture is unreadable for about a minute, readable by two. |
@@ -120,18 +127,14 @@ Said plainly, because the brief asked for it and because most of them are choice
 | curve, Dmin/Dmax, latitude, opacifier colour, white, frame | Model.h | chosen by eye inside the published picture of instant film (short latitude, soft highlights); not measured. |
 | meter | mid grey 0.18, −2..+3 stops | the target is the photographic mid grey; the range is **assumed**. |
 
-The qualitative facts the temperature model was built against are Polaroid's support
-article "How does temperature affect Polaroid film?". The build session had it only
-as quoted by search results (the live page answers 403 to scripts), which said a
-*cyan* tint in the cold. **Re-read at release (2026-09-25) through the Internet
-Archive's copies of 2023-02 and 2026-04**, the page says: a working range of 13–28 °C;
-below it, photos "emerge over-exposed, lacking color contrast and with a green tint";
-above it, colour photos "develop with a yellow/red tint". So the model agrees on the
-light, low-contrast cold print and on the warm hot one, and **disagrees on the cold
-hue**: its cold cast is blue-cyan, because the yellow dye is the slowest and is the one
-cut short; a green tint would need the magenta to lag instead. That was not changed at
-release (it would reorder the development the whole plugin is built on); it is stated
-in the guide. No number in the plugin is taken from the page.
+The qualitative facts the temperature model is built against are Polaroid's support
+article "How does temperature affect Polaroid film?", read through the Internet Archive
+(copies of 2023-02 and 2026-04; the live page answers 403 to scripts): a working range of
+13–28 °C; below it, photos emerge light and flat "with a green tint"; above it, colour
+photos take a yellow/red tint. The build session had it only as quoted by search results,
+which said *cyan*, and v0.1.0 shipped a blue-cyan cold print. v0.1.1 matches the page:
+see "v0.1.1: the cold print goes green". The page gives no numbers; two of the four
+activation energies are fitted to its words.
 
 ---
 
@@ -235,7 +238,8 @@ and four roundings in the products; rounded up. The opacifier is good to
 | `--develop` clock | film age = frame × Speed / 60 | 1e-9 × frames (double) | none |
 | `--develop` opacifier | τop from ln O against t | the same, with the opacifier's relative bound | none |
 | `--develop` B&W | the three channels are one image | the density bound at Dmax 2 | none |
-| `--arrhenius` | τ(14 °C) / τ(34 °C) per layer and the opacifier, against exp(Ea/R (1/T1 − 1/T2)) | the ratio times the sum of the two fits' relative bounds | none |
+| `--arrhenius` | τ(14 °C) / τ(34 °C) per layer, each against exp(Ea_i/R (1/T1 − 1/T2)) at its own Ea, and the opacifier | the ratio times the sum of the two fits' relative bounds | none |
+| `--cast` | a neutral grey after the stop and ten opacifier τ, read from the picture's densities at --order's corner pixel: G below R and B in density by ≥ 0.02 at 4, 6, 12 °C; max − min ≤ tol at 24 °C; B − R ≥ 0.02 at 30, 34, 36 °C | the margin 0.02 is a statement of "visible" (4.7% reflectance, ~3 levels at mid grey), not fitted; plus 2× --order's per-channel tolerance and O0 e^−10 of opacifier residue | the pixel is at 1/10 of the frame from the bottom-left; the densities are flat-patch values, identical at 320×180, 1280×720 and on the software renderer to 1e-4 |
 | `--order` lead | at 240 s the picture's densities R > G > B | coarse by design: the spec's claim as an inequality (margins ~0.07) | the pixel is at 1/10 of the frame from the bottom-left, whatever the raster |
 | `--order` monotone, neutral | the balance (max − min channel density) never rises; at 640 s it is ≤ tol | 2× the density bound at Dmax + the encode's pow (32 kU / ln 10) + the shine's stated value at the pixel over the darkest channel; at the end plus the opacifier's stated residue (O0,R − O0,G) e^(−S/τop) | the shine is computed at the pixel from the stated band |
 | `--front` | each row's start from its opacifier, t0 = age − S, against distance / speed | τop × the opacifier's bound + (n + 8) kU of the age (the arrival's rounding) = 6.8e-5 s | every row of the column, s measured in image heights at the pixel centre; the dose is linear in s, so a bilinear read at a texel centre is exact |
@@ -264,7 +268,7 @@ but checked only by the sweep.
 
 ### The negative controls
 
-`intest --negative` runs eight, and `--perturb BITS` runs any check verbosely against
+`intest --negative` runs nine, and `--perturb BITS` runs any check verbosely against
 one. Each perturbs the *plugin's* model — a `Perturb` bit the shipped plugin carries at
 zero — never the harness's expectation. Measured at 320×180 and 1280×720:
 
@@ -278,6 +282,7 @@ zero — never the harness's expectation. Measured at 320×180 and 1280×720:
 | a resize that clears the print | `--take`, 2 of 7: 0.73 off in density |
 | a capture that follows the clip | `--take`, 5 of 7 |
 | the camera's meter ignored | `--meter`, 3 of 3 |
+| v0.1.0's one activation energy (67.41 kJ/mol) for every dye layer (bit 256) | `--cast`, 3 of 7: every cold case, e.g. 6 °C G above B by −0.090 (the print is blue-cyan, (119, 127, 138)); the reference and hot cases still pass, as they should (v0.1.0 was neutral at 24 °C and warm when hot) |
 
 ### The mutation
 
@@ -290,6 +295,16 @@ against 1.3e-4) and `--meter` (1 of 3: 6.5e-3 off the stated density of mid grey
 stop. Reverted with `git checkout source/Shaders.cpp`; the tree was clean before and
 after. It shows a gap: no check measures the stop itself directly, only its
 consequences.
+
+**v0.1.1's mutation**, on the committed tree: in the print pass, `exp( -dose.xyz / tau )` →
+`exp( -dose.xxz / tau )`, so magenta develops on CYAN's dose. Caught by `--arrhenius` alone
+(magenta's ratio 16.870 against 18.433 at 106.85 kJ/mol, tolerance 0.56). `--develop`,
+`--order`, `--meter` and `--take` run at 24 °C, where every dose is the same, and correctly
+passed. **`--cast` passed too**, and that is a real limit of a hue check: cyan's activation energy
+(103.6) is close to magenta's (106.85), so magenta on cyan's dose is still cut shortest in the
+cold by its longer τ, and the grey is still green. `--cast` holds the direction of the casts;
+`--arrhenius` holds the numbers. Reverted by restoring source/Shaders.cpp from git, clean before
+and after.
 
 ---
 
@@ -418,9 +433,16 @@ and 1280×720, and again at 320×180 on Apple's software renderer.
   B&W 90.0000 against 90; opacifier 44.9997 against 45 (tolerance 3.5e-3).
 - **Order.** At 240 s density R 0.676 > G 0.607 > B 0.516; the balance falls on every
   one of 46 steps to 3.0e-7 past the stop (tolerance 1.3e-4).
-- **Arrhenius.** τ(14 °C)/τ(34 °C) = 6.28707, 6.28710, 6.28716 for cyan, magenta and
-  yellow against 6.28703 at 67.41 kJ/mol; the opacifier 2.50736 against 2.50739 at
-  33.7 kJ/mol.
+- **Arrhenius** (v0.1.1, per layer). τ(14 °C)/τ(34 °C) = 16.86959 for cyan against
+  16.86948 at 103.6 kJ/mol, 18.43316 for magenta against 18.43303 at 106.85, 6.28714 for
+  yellow against 6.28703 at 67.41 (1280×720; 320×180 within 1e-4); the opacifier 2.50736
+  against 2.50739 at 33.7 kJ/mol.
+- **Cast** (v0.1.1). A neutral grey after the stop, out of the picture: 4 °C G above R by
+  0.1528 and above B by 0.1788 in density, 8-bit (148, 174, 143); 6 °C 0.1526 and 0.1526,
+  (140, 165, 139); 12 °C 0.1088 and 0.0620; 24 °C off neutral by 9.6e-8 (tolerance 2.3e-4);
+  30, 34, 36 °C R above B by 0.0216, 0.0291, 0.0314 (margin 0.02 each). The same at 320×180
+  and on the software renderer. 30 °C is the tightest (1.08× the margin); the hot cast is
+  v0.1.0's and small by construction.
 - **Front.** Every row began at distance / speed to 4.1e-6 s (180 rows) and 4.5e-6 s
   (720 rows), tolerance 6.8e-5; the speed out of the picture 1.000001 image heights / s.
 - **Roller.** Whole-pixel (55 and 225 px): D(s + C) = D(s) exactly on every row; marks at
@@ -432,7 +454,7 @@ and 1280×720, and again at 320×180 on Apple's software renderer.
   mid-development, the same print to 2.3e-7 (tolerance 1.3e-5).
 - **Meter.** sRGB 0.30 and 0.70 print the same to 6e-8, at the stated 0.68657; sRGB 0.03
   prints 1.60204 against the stated 1.60200 at the +3-stop limit.
-- **Negative controls** all eight fail; **the mutation** is caught (above).
+- **Negative controls** all nine fail; **the mutations** are caught (above).
 - **No dead controls**, all 12, with the four About buttons skipped.
 - **Every shader** (six stages) compiles through `glslc` as the plugin assembles it; no
   reserved word as an identifier. **The activation energy** refits from the chart.
@@ -447,9 +469,13 @@ and 1280×720, and again at 320×180 on Apple's software renderer.
 
   | | ms/frame | % of a 60fps frame | state held |
   | --- | --- | --- | --- |
-  | 1280×720 | 0.051 | 0.3% | 21 MB |
-  | 1920×1080 | 0.071 | 0.4% | 47 MB |
-  | 3840×2160 | 0.374 | 2.2% | 190 MB |
+  | 1280×720 | 0.089 | 0.5% | 35 MB |
+  | 1920×1080 | 0.164 | 1.0% | 79 MB |
+  | 3840×2160 | 0.635 | 3.8% | 316 MB |
+
+  v0.1.1, with the RGBA32F doses (v0.1.0: 0.051, 0.071, 0.374 ms and 21, 47, 190 MB, on a
+  quieter GPU; how much of the rise is the wider buffers and how much the shared GPU was
+  not separated).
 
   A take adds one capture pass and the meter's 64 × 64 pass and mip chain.
 
@@ -466,8 +492,11 @@ and 1280×720, and again at 320×180 on Apple's software renderer.
   a real camera's rules.
 - **The chemistry's numbers** are the table above: one fitted from a chart for a
   different process, the rest assumptions.
-- **Nothing measures the casts** Temperature produces, nor Expired, Vintage, the spread
-  shapes, the texture or the shine — only the sweep says they change the picture.
+- **`--cast` measures the hue of Temperature's casts** on a neutral grey, not their strength
+  (judged by eye), and nothing measures Expired, Vintage, the spread shapes, the texture or
+  the shine — only the sweep says they change the picture.
+- **Two activation energies are fitted to a description in words** (cyan's and magenta's, to
+  the manufacturer's "green tint"), not to any measurement.
 - **No check measures the stop time directly** (the mutation found that gap).
 - **Not verified at 4K**, only benchmarked there.
 
@@ -523,9 +552,66 @@ the runner's software renderer, and the first Windows MSVC build, which compiled
 - **The temperature source, re-read**: the Polaroid support article (115012361067) through the
   Internet Archive (2023-02-01 and 2026-04-06 copies; the live page answers 403 to scripts)
   says below 13 °C prints come out "over-exposed, lacking color contrast and with a green
-  tint", above 28 °C colour prints "a yellow/red tint". The model's cold cast is cyan. Left as
-  it is and stated in the guide, README, ATTRIBUTIONS and derived.json. A green cold tint
-  would need magenta to be the layer cut short.
+  tint", above 28 °C colour prints "a yellow/red tint". The model's cold cast was cyan. Left as
+  it was at v0.1.0 and stated in the guide, README, ATTRIBUTIONS and derived.json; **v0.1.1
+  changed it** (next section).
 - **IntoTheGlow_02 flashes every half second**, so a take on it prints whichever phase it
   caught; the first video beat moved to Metalive's steady gold.
+
+---
+
+## v0.1.1: the cold print goes green (2026-09-25)
+
+Allan's call, the same evening: make the model agree with the manufacturer's page, in the
+model, not with a grade.
+
+**What changed.** Each dye layer has its own activation energy and its own dose. The dose
+buffers went RG32F → RGBA32F (cyan, magenta, yellow, stop); `KDye` is a vec3. Yellow keeps
+the ILFORD fit (67.41 kJ/mol); **cyan 103.6 and magenta 106.85 kJ/mol** come from
+`tools/cast_fit.py`, which solves two conditions at 6 °C (`kCastFitC`) on a mid grey:
+red = blue (a green, not a cyan-green or a yellow-green), and a cast as strong as v0.1.0's
+(max − min of the balanced completions, 0.2223). The timing layer is unchanged (half the chart's
+figure), so the stop is where it was at every temperature. The black-and-white stock develops
+its one image at the chart's figure (the process the chart is for), so its three channels stay
+one image. Vintage takes the colour stock's per-layer figures with its own τ; its cast is not
+checked. `Perturb` bit 256 restores v0.1.0's shared figure.
+
+**Why these two and not magenta alone.** Raising only magenta's Ea makes G the highest channel
+but leaves cyan nearly complete and yellow cut short, so R is low and B high: a teal, not a green.
+Holding R = B needs cyan cut as far as yellow, and cyan's τ is the shortest (70 s), so cyan needs
+a HIGHER Ea than yellow to be cut as much. That is why cyan's fitted figure (103.6) is close to
+magenta's (106.85): most of magenta's extra deficit comes from its longer τ (120 s). Cold slows
+magenta most (the highest Ea); the order of arrival at 24 °C is untouched (every factor is 1).
+
+**No citable per-layer figure.** Searched 2026-09-25: the diffusion-transfer patents describe
+the layers and the dye developers, not their temperature dependence; film reviews repeat the
+green/blue-green cold cast qualitatively. So the two figures are a fit to words.
+
+**Before and after**, through `--pipe`, the centre of a flat sRGB-128 clip at the defaults,
+Speed 256×, frame 460 at 60 fps (after the stop at every temperature), 8-bit, v0.1.0 built
+from its tag in scratch:
+
+| | v0.1.0 | v0.1.1 |
+| --- | --- | --- |
+| 4 °C | 124, 134, 146 | 151, 176, 146 |
+| 6 °C | 123, 131, 142 | 143, 167, 142 |
+| 14 °C | 121, 124, 129 | 124, 135, 129 |
+| 24 °C | 120, 120, 119 | 120, 120, 119 |
+| 34 °C | 120, 120, 116 | 120, 120, 116 |
+| 36 °C | 120, 120, 116 | 120, 120, 116 |
+
+(The v0.1.0 section's (119, 128, 139) at 6 °C was a different pixel and input; same hue.) The
+cold print is paler as well as green: at 4 °C magenta reaches 0.45 of its balanced density.
+14 °C, inside the 13–28 °C working range, still carries a mild green-cyan cast (v0.1.0 had a
+mild cyan one there); the page promises only that the film "works best" inside the range.
+
+**The checks.** `--arrhenius` compares each layer with its own ratio. `--cast` is new (see
+the rasteriser table); its negative control is bit 256. verify.sh and CI run both and
+`cast_fit.py --check`. The mutation that `--cast` missed is recorded under "The mutation".
+
+**The demo.** `sync_shaders.py` re-spliced the shaders and Model.h (the new
+`kLayerActivation` and `kCastFitC` included); the hand port changed in three places
+(RGBA32F doses in `ensure` and `rescale`, the per-layer `kDye` with the mono/bit-256 rule,
+`KDye` set as a vec3) plus the telemetry line and the Temperature hint.
+`check_shaders.py --dump` holds the page's GLSL and constants to the plugin's.
 

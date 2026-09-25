@@ -76,13 +76,13 @@ No code was taken from these — but they were how we knew we had it right, and 
 
 <https://www.ilfordphoto.com/wp/wp-content/uploads/2017/03/Temperature-compensation-chart.pdf>
 
-The source of the dye activation energy, 67.41 kJ/mol: five of the chart's rows (40 cells) are transcribed in tools/arrhenius_fit.py, which fits ln t against 1/T with a shared slope (standard error 620 J/mol) and which verify.sh re-runs. The chart is for black-and-white silver development in a tank; applying it to the dye layers of an integral print is an assumption. The timing layer's activation energy, half of it, has no source.
+The source of the yellow dye layer's activation energy (and the black-and-white image's), 67.41 kJ/mol: five of the chart's rows (40 cells) are transcribed in tools/arrhenius_fit.py, which fits ln t against 1/T with a shared slope (standard error 620 J/mol) and which verify.sh re-runs. The chart is for black-and-white silver development in a tank; applying it to the dye layers of an integral print is an assumption. The timing layer's activation energy, half of it, has no source. Since v0.1.1 the cyan and magenta layers have their own, fitted to the manufacturer's description below, not to this chart.
 
 ### What temperature does to an integral print — Polaroid support, "How does temperature affect Polaroid film?"
 
 <https://support.polaroid.com/hc/en-us/articles/115012361067>
 
-A working range of 13-28 C; below it prints emerge over-exposed, lacking colour contrast and with a green tint; above it colour prints develop with a yellow/red tint. Read on 2026-09-25 through the Internet Archive's copies of 2023-02 and 2026-04 (the live page answers 403 to scripts). No number in the plugin is taken from it. The plugin's cold print is pale and low in contrast as stated, but its cast is blue-cyan, not green: it comes from the yellow dye being slowest, and the page's green would need the magenta to lag instead. That disagreement is stated in the guide.
+A working range of 13-28 C; below it prints emerge over-exposed, lacking colour contrast and with a green tint; above it colour prints develop with a yellow/red tint. Read on 2026-09-25 through the Internet Archive's copies of 2023-02 and 2026-04 (the live page answers 403 to scripts). The page gives no numbers. Since v0.1.1 the cyan and magenta layers' activation energies (103.6 and 106.85 kJ/mol) are fitted to its description by tools/cast_fit.py: at 6 C a mid grey comes out with red equal to blue, a green, with a cast as strong as v0.1.0's. They are a fit to words, not a measurement; no published per-layer figure was found. The hot print's warm cast falls out of the model unfitted.
 
 ### Roller marks and undeveloped patches — Instant-film troubleshooting guides (Dan Finnen, danfinnen.com; Polaroid support)
 

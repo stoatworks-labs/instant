@@ -4,7 +4,7 @@ Instant film developing in front of you — an integral print, exposed by a Take
 developing over minutes — as an FFGL **effect** for Resolume Arena/Avenue. C++/GLSL,
 CMake MODULE → universal `.bundle` (macOS) + Windows `.dll`. MIT.
 
-Read `AGENTS.md` before changing a time constant, the activation energy, the stop,
+Read `AGENTS.md` before changing a time constant, an activation energy, the stop,
 the spread or the meter.
 
 ## Commands (CMake)
@@ -26,6 +26,8 @@ the spread or the meter.
 - The exact GLSL the plugin compiles: `./build/intest --dump-shaders DIR`
 - Refit the activation energy: `python3 tools/arrhenius_fit.py` (`--check` compares
   it with `source/Model.h`)
+- Refit the cyan and magenta activation energies to the cold green: `python3 tools/cast_fit.py`
+  (`--check` likewise; they are fitted to the manufacturer's words, not a measurement)
 - Footage through the real shaders — **`--pipe`**, raw RGBA frames in, raw RGBA frames
   out, with `--size WxH`, `--fps N` (frame n is clocked at n / fps) and an optional
   `--script` of `frame Parameter Name value` cues. A slider ramps linearly between
@@ -43,7 +45,8 @@ the spread or the meter.
   8 minutes on this Mac, most of it the software renderer)
 - Each dye layer follows its first-order law with the stated tau: `./build/intest --develop`
 - Cyan leads at 240 s; the balance then only moves toward neutral: `./build/intest --order`
-- tau at 14 and 34 °C in the Arrhenius ratio, every layer: `./build/intest --arrhenius`
+- tau at 14 and 34 °C in each layer's own Arrhenius ratio: `./build/intest --arrhenius`
+- A neutral grey after the stop is green cold, neutral at 24 °C, warm hot: `./build/intest --cast`
 - Each row starts at distance / front speed: `./build/intest --front`
 - The roller repeats at its circumference, whole-pixel and fractional: `./build/intest --roller`
 - The print develops from the capture as the clip changes; a resize keeps it: `./build/intest --take`
@@ -61,7 +64,7 @@ the spread or the meter.
 ## Notes
 - **The print is a process, not a grade.** Capture at the take → meter → each texel's
   dye and stop doses, accumulated every frame from the film-seconds after the reagent
-  front arrived, each weighted by an Arrhenius rate → per layer D = Dinf (1 − e^(−A/τ)),
+  front arrived, each layer weighted by its own Arrhenius rate → per layer D = Dinf (1 − e^(−A_i/τ_i)),
   the opacifier O0 e^(−S/τop) → the white pigment through both. `Model.h` holds the
   numbers; the `kModel` GLSL library in `Shaders.cpp` holds the spread and the curve,
   after a constants block written from `Model.h` at assembly time.

@@ -1504,7 +1504,7 @@ int runNegative( int W, int H )
 		{ model::kPerturbResizeClears, "a resize that clears the print", runTake, "--take" },
 		{ model::kPerturbLiveCapture, "a capture that follows the clip", runTake, "--take" },
 		{ model::kPerturbNoMeter, "the camera's meter ignored", runMeter, "--meter" },
-		{ model::kPerturbSharedActivation, "v0.1.0's one activation energy for every dye", runCast, "--cast" },
+		{ model::kPerturbSharedActivation, "v0.1.0's one Ea for every dye layer", runCast, "--cast" },
 	};
 	int failures = 0;
 	for( const Control& c : controls )

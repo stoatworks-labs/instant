@@ -4,8 +4,8 @@ Instant is **instant film developing in front of you, for [Resolume](https://res
 Arena and Avenue**, as an FFGL effect. It does not fade a grade in. It runs the process of an
 integral instant print on the clip: a Take exposes the frame, and then the print develops in the
 open, stage by stage, in the order the chemistry sets. The dark green-grey start, the pale
-blue-cyan picture that warms as it arrives, the casts of cold and hot film, the dark corners of a
-short spread and the repeating mark of a dirty roller are what that process does.
+blue-cyan picture that warms as it arrives, the green of cold film and the warmth of hot film, the
+dark corners of a short spread and the repeating mark of a dirty roller are what that process does.
 
 ![Resolume's demo clip IntoTheGlow as three moments of one print: a dark green-grey frame with the picture just showing through, the same print pale and blue a second later, and the finished print warm and dense](hero.png)
 
@@ -13,17 +13,19 @@ short spread and the repeating mark of a dirty roller are what that process does
 offline harness rather than captured from Resolume: half a second, two seconds and eleven seconds
 after the take, at 64x.*
 
-> **Before you rely on this:** released at **v0.1.0**, and honestly early. The process is
+> **Before you rely on this:** released at **v0.1.1**, and honestly early. The process is
 > measured rather than asserted, by a harness that drives the real plugin class and reads each
 > claim back out of what it renders, at two rasters and on a software renderer: each dye layer's
 > density follows its first-order law with the stated time constant (70, 120 and 200 s for cyan,
 > magenta and yellow, recovered to 1e-5); four minutes in, a neutral grey reads R 0.68 > G 0.61 >
 > B 0.52, a blue-cyan print, and then moves only toward neutral, reaching it at the stop; the time
-> constants at 14 and 34 °C stand in the Arrhenius ratio for every layer and for the timing layer;
+> constants at 14 and 34 °C stand in the Arrhenius ratio for each layer at its own activation
+> energy and for the timing layer; a neutral grey comes out green when cold, neutral at 24 °C and
+> warm when hot;
 > each row starts developing at its distance from the pod over the front's speed; the dirty
 > roller's mark repeats at exactly its circumference; the print develops from the captured frame
 > however the clip changes, and survives a resize; and the camera's meter prints two exposures
-> alike. Eight deliberately broken models are each shown to fail their check, and all 12 controls
+> alike. Nine deliberately broken models are each shown to fail their check, and all 12 controls
 > are shown to change the picture. **The checks verify the stated model, not a real print**: most
 > of the chemistry's numbers are assumptions, listed under Where the numbers come from. It has
 > **never been loaded into Resolume on macOS**; there the one host it has run in is the fleet's
@@ -94,7 +96,7 @@ toward neutral from then on.
    the first press in Take mode, the plugin shows the clip untouched (a viewfinder).
 4. Lower **Speed** to watch a print come up slowly. **1x is real time**: a real print takes about
    ten minutes to the stop, and is readable after two.
-5. Try **Temperature** at its ends before a take: cold film comes out pale and blue-cyan, hot film
+5. Try **Temperature** at its ends before a take: cold film comes out pale and green, hot film
    warm.
 
 The print floats in its white frame, and outside it the output is transparent, so the layer below
@@ -138,30 +140,36 @@ the far end of a short spread (Spread, below).
 - **Vintage**: slower dyes (90, 170, 230 s), a shorter latitude, a warm base stain and weaker
   cyan: an older, warmer, paler print.
 
-**Temperature**, 4 to 36 °C, default 24. Every rate follows the Arrhenius law. The dyes' activation
-energy (67.4 kJ/mol) is fitted to a published development chart; the timing layer's is taken as
-half of it. So cold film slows the dyes more than it slows the stop: development ends before the
-slow yellow layer has arrived, and the print is pale, low in contrast and blue-cyan. Hot film
-finishes: every layer reaches its asymptote, a little warm. Cold also takes longer to stop: at
+**Temperature**, 4 to 36 °C, default 24. Every rate follows the Arrhenius law, and each dye layer
+has its own activation energy: yellow 67.4 kJ/mol, fitted to a published development chart; cyan
+103.6 and magenta 106.85 kJ/mol, fitted to the manufacturer's description of a cold print (see
+below); the timing layer half the chart's figure. So cold film slows the dyes more than it slows
+the stop, and magenta most of all: development ends short, and the print is pale, low in contrast
+and **green**. Hot film finishes: every layer reaches its asymptote, and the slow yellow a little
+past its balance, so the print is a little warm, yellow-red. Cold also takes longer to stop: at
 64x, about 25 s at 4 °C, 9.4 s at 24 °C and 5.5 s at 36 °C.
 
-Measured through the plugin, a mid-grey patch printed at 256x, after the stop:
+Measured through the plugin, the centre of a flat mid-grey clip (sRGB 128) at the defaults,
+printed at 256x, after the stop, 8-bit:
 
-| | R | G | B |
-| --- | --- | --- | --- |
-| 6 °C | 119 | 128 | 139 |
-| 14 °C | 117 | 120 | 125 |
-| 24 °C | 117 | 117 | 116 |
-| 34 °C | 117 | 116 | 112 |
+| | R | G | B | in v0.1.0 |
+| --- | --- | --- | --- | --- |
+| 4 °C | 151 | 176 | 146 | 124, 134, 146 |
+| 6 °C | 143 | 167 | 142 | 123, 131, 142 |
+| 14 °C | 124 | 135 | 129 | 121, 124, 129 |
+| 24 °C | 120 | 120 | 119 | the same |
+| 34 °C | 120 | 120 | 116 | the same |
+| 36 °C | 120 | 120 | 116 | the same |
 
-The cold cast is strong; the hot cast is slight. **The manufacturer describes the cold cast
-differently.** Its support page on temperature says that below 13 °C prints come out
-over-exposed, lacking colour contrast and **with a green tint**, and that above 28 °C colour
-prints develop with a yellow/red tint. This model agrees on the light, flat cold print and on the
-warm hot one, but its cold cast is blue-cyan, not green: it comes from the yellow dye being the
-slowest and the one cut short, and a green tint would need the magenta to lag instead. The plugin
-was not changed to match, because that would reorder the development the rest of it is built on;
-it is recorded here instead.
+The cold cast is strong; the hot cast is slight. This is what the manufacturer's support page on
+temperature describes: below 13 °C prints come out over-exposed, lacking colour contrast and
+"with a green tint", and above 28 °C colour prints take a yellow/red tint. v0.1.0 gave the cold
+print a blue-cyan cast instead, because all three dyes shared one activation energy and the
+slowest, yellow, was the one cut short. The page gives no numbers, and no published per-layer
+figure was found, so the cyan and magenta activation energies are **fitted to the page's words**:
+at 6 °C a mid grey comes out with red and blue equal (the hue green, neither cyan- nor
+yellow-green), and its cast is as strong as v0.1.0's cyan one was. The order the picture arrives
+in at 24 °C is unchanged: every factor is 1 there.
 
 Temperature is live for a developing print (a real print cares about the temperature it develops
 at, not the one it was exposed at), and changes nothing after the stop.
@@ -237,8 +245,9 @@ Said plainly, because most of them are choices.
 
 | number | value | status |
 | --- | --- | --- |
-| dye activation energy | 67.41 kJ/mol | **fitted** to 40 cells of ILFORD's film development time/temperature compensation chart (2002), standard error 0.62 kJ/mol. That chart is for black-and-white silver development; using it for dye diffusion is an **assumption**. |
-| timing layer's activation energy | 33.7 kJ/mol | **assumed**: half the dye figure. No source. |
+| yellow dye's activation energy (and the black-and-white image's) | 67.41 kJ/mol | **fitted** to 40 cells of ILFORD's film development time/temperature compensation chart (2002), standard error 0.62 kJ/mol. That chart is for black-and-white silver development; using it for dye diffusion is an **assumption**. |
+| cyan and magenta dyes' activation energies | 103.6 and 106.85 kJ/mol | **fitted to a description**, not a measurement: the manufacturer's cold print is green, so at 6 °C a mid grey has red equal to blue and a cast as strong as v0.1.0's (`tools/cast_fit.py`). No published per-layer figure was found. |
+| timing layer's activation energy | 33.7 kJ/mol | **assumed**: half the chart's figure. No source. |
 | dye time constants at 24 °C | 70, 120, 200 s | **assumed**: in the order the process is known for (blue-cyan first, warming), sized so the print is done in about ten minutes. |
 | black and white; vintage | 90 s; 90, 170, 230 s | **assumed** |
 | opacifier | 45 s | **assumed**: unreadable for about a minute, readable by two |
@@ -250,14 +259,15 @@ Said plainly, because most of them are choices.
 | meter | mid grey 0.18, −2 to +3 stops | the target is the photographic mid grey; the range is **assumed** |
 
 The 13 to 28 °C range and the casts are from the manufacturer's support page on temperature, read
-at release through the Internet Archive's copies of February 2023 and April 2026 (the live page
-refuses scripted readers). **No number in the plugin is taken from it**, and on the cold cast it
-and the model disagree (see Temperature). The development time of about ten to fifteen minutes is
+through the Internet Archive's copies of February 2023 and April 2026 (the live page refuses
+scripted readers). It gives no numbers; the cyan and magenta activation energies are fitted to its
+words (see Temperature). The development time of about ten to fifteen minutes is
 the manufacturer's figure as quoted by search results; it was not read at its source.
 
-Nothing measures the casts that Temperature, Expired and Vintage produce against a real print:
-the harness measures the rates behind them, and the casts were judged by eye on Resolume's demo
-clips.
+Nothing measures the casts that Temperature, Expired and Vintage produce against a real print.
+The harness measures the rates behind them, and checks the hue of Temperature's casts on a
+neutral grey (green cold, neutral at 24 °C, warm hot); how strong they are, and the Expired and
+Vintage casts, were judged by eye on Resolume's demo clips.
 
 ---
 
@@ -331,8 +341,7 @@ host's clock and the unit the plugin decided it is in.
 ## Known limits
 
 - **The chemistry's numbers are mostly assumptions** (see Where the numbers come from). One is
-  fitted, to a chart for a different process.
-- **The cold cast disagrees with the manufacturer's description**: blue-cyan here, green there.
+  fitted to a chart for a different process, two to a manufacturer's description in words.
 - **Each dye absorbs only its own channel.** Real dyes have unwanted absorptions and spectral
   curves; interimage effects are not modelled either.
 - **The spread is a straight front** with a stated reach, not a fluid; the reagent trap at the top
