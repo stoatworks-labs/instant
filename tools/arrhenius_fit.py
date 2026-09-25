@@ -41,10 +41,13 @@ in Model.h, in AGENTS.md and in ATTRIBUTIONS.md.
 The timing layer (which ends development and clears the opacifier by dropping
 the pH) is diffusion-controlled, and diffusion has a lower activation energy
 than a chemical step. The plugin takes HALF this figure for it. That is an
-assumption with no source; it is what makes cold film end development before
-the slow yellow layer arrives (low contrast and a cyan cast; the manufacturer's
-support page describes the low contrast but a GREEN tint), and hot film finish
-it (the warm cast).
+assumption with no source; it is what makes cold film end development short
+(the light, low-contrast print) and hot film finish it (the warm cast).
+
+Since v0.1.1 this figure is the YELLOW layer's, the black-and-white stock's and
+(halved) the timing layer's. Cyan and magenta have their own, fitted by
+tools/cast_fit.py to the manufacturer's description of a cold print's green
+tint, not to this chart.
 """
 import math
 import pathlib

@@ -12,12 +12,13 @@
 	   **meter**: the capture's luminance over the image window onto a 64 x 64
 	   R32F grid, averaged by its mip chain -- the camera's averaging cell.
 
-	2. **develop** -- picture size, RG32F, ping-ponged against its own
+	2. **develop** -- picture size, RGBA32F, ping-ponged against its own
 	   previous output, every frame a print exists. Per texel: where the
 	   reagent front is (it left the pod edge at the take and moves at a
 	   stated speed), and how much of this frame's film-seconds fell after
-	   it arrived; that, times the Arrhenius rate at the current temperature,
-	   is added to the dye dose (r) and the stop dose (g). Once the stop dose
+	   it arrived; that, times each layer's Arrhenius rate at the current
+	   temperature, is added to the cyan, magenta and yellow dye doses (rgb),
+	   and times the timing layer's to the stop dose (a). Once the stop dose
 	   passes the stop, no more dye moves.
 
 	3. **resample** -- one buffer into a buffer of another size, bilinear.

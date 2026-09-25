@@ -20,9 +20,10 @@
 	drops the pH -- which also ends development. So the picture comes up
 	from a dark green-grey, pale and cyan first, and warms to full colour.
 
-	**Four passes**, in `Shaders.h`. The development state is two doses per
-	texel, accumulated every frame from the frame's film-seconds after the
-	reagent front arrived, each weighted by an Arrhenius rate: first-order
+	**Four passes**, in `Shaders.h`. The development state is four doses per
+	texel (one per dye layer, and the timing layer's), accumulated every frame
+	from the frame's film-seconds after the reagent front arrived, each
+	weighted by its own Arrhenius rate: first-order
 	development is then exact in the dose, whatever the temperature did.
 	Time is reduced in double here, frame-relative; nothing absolute crosses
 	into GLSL. See AGENTS.md for the traps.
@@ -121,7 +122,7 @@ private:
 	ffglex::FFGLScreenQuad quad;
 
 	instant::PassBuffer capture;     ///< the light at the take, RGBA16F
-	instant::PassBuffer dose[ 2 ];   ///< ( dye dose, stop dose ), RG32F, ping-pong
+	instant::PassBuffer dose[ 2 ];   ///< ( cyan, magenta, yellow dye doses, stop dose ), RGBA32F, ping-pong
 	instant::PassBuffer scratch;     ///< the other side of a resize
 	instant::PassBuffer meter;       ///< the camera's cell: 64 x 64 R32F, mipmapped
 	int current = 0;                 ///< which dose buffer holds the state

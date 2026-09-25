@@ -189,11 +189,11 @@ void main()
 // source raster.
 //---------------------------------------------------------------------------
 const char* const kDevelopBody = R"(
-uniform sampler2D Previous;  //( dye dose, stop dose ), same raster
+uniform sampler2D Previous;  //( cyan, magenta, yellow dye doses, stop dose ), same raster
 uniform vec2 Size;           //the raster, pixels
 uniform float AgeStart;      //film-seconds since the take, at this frame's start
 uniform float DAge;          //film-seconds this frame
-uniform float KDye;          //the dye's Arrhenius rate, 1 at 24 degC
+uniform vec3 KDye;           //each dye layer's Arrhenius rate, 1 at 24 degC
 uniform float KStop;         //the timing layer's
 uniform float StopDose;      //when development ends, stop-seconds
 
@@ -203,7 +203,7 @@ out vec4 fragColor;
 void main()
 {
 	ivec2 p   = ivec2( gl_FragCoord.xy );
-	vec2 dose = texelFetch( Previous, p, 0 ).rg;
+	vec4 dose = texelFetch( Previous, p, 0 );
 
 	//This texel's place on the film. The source raster is the whole clip
 	//frame; the image window shows its centre, so film coordinates are the
@@ -216,7 +216,7 @@ void main()
 
 	if( s > reachAt( u ) )
 	{
-		fragColor = vec4( dose, 0.0, 1.0 );
+		fragColor = dose;
 		return;
 	}
 
@@ -228,9 +228,10 @@ void main()
 
 	//The timing layer runs on; the dye moves only until the stop, and on
 	//the frame that crosses it only for the part of the frame before it.
+	//Each layer at its own rate.
 	float dStop = KStop * overlap;
-	float part  = dStop > 0.0 ? clamp( ( StopDose - dose.y ) / dStop, 0.0, 1.0 ) : 0.0;
-	fragColor   = vec4( dose.x + KDye * overlap * part, dose.y + dStop, 0.0, 1.0 );
+	float part  = dStop > 0.0 ? clamp( ( StopDose - dose.w ) / dStop, 0.0, 1.0 ) : 0.0;
+	fragColor   = vec4( dose.xyz + KDye * overlap * part, dose.w + dStop );
 }
 )";
 
@@ -258,7 +259,7 @@ void main()
 // y UP, so the pod edge (the bottom of the image) is ImageMin.y.
 //---------------------------------------------------------------------------
 const char* const kPrintBody = R"(
-uniform sampler2D Dose;      //( dye dose, stop dose )
+uniform sampler2D Dose;      //( cyan, magenta, yellow dye doses, stop dose )
 uniform sampler2D Capture;   //linear light at the take
 uniform sampler2D Source;    //the host's input, for Mix and the viewfinder
 uniform sampler2D Meter;     //the meter's reading, at its top mip level
@@ -360,14 +361,14 @@ void main()
 	depth *= 1.0 - Roller * kRollerDepth * across * marks;
 
 	//Development so far.
-	vec2 dose = texture( Dose, q ).rg;
+	vec4 dose = texture( Dose, q );
 	vec3 tau  = Tau;
 	if( ( Perturb & 1 ) != 0 )
 		tau = vec3( Tau.g );
 	if( ( Perturb & 8 ) != 0 )
 		tau.r *= 1.1;
-	vec3 D = Balance * dinf * depth * ( 1.0 - exp( -dose.x / tau ) );
-	vec3 O = vec3( kOpacifierR, kOpacifierG, kOpacifierB ) * exp( -dose.y / TauOp );
+	vec3 D = Balance * dinf * depth * ( 1.0 - exp( -dose.xyz / tau ) );
+	vec3 O = vec3( kOpacifierR, kOpacifierG, kOpacifierB ) * exp( -dose.w / TauOp );
 
 	if( Probe == 1 )
 	{

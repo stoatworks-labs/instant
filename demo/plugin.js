@@ -52,7 +52,7 @@
  *
  * ------------------------------------------------------------- the buffers
  *
- * The plugin's: the capture RGBA16F, two dose buffers RG32F (ping-pong), all
+ * The plugin's: the capture RGBA16F, two dose buffers RGBA32F (ping-pong), all
  * three linear-sampled, and the meter a 64 × 64 R32F with a mip chain it reads
  * at level 6. Rendering into a float texture is an extension in WebGL2
  * (EXT_color_buffer_float), and filtering one — which the print pass does to
@@ -276,11 +276,11 @@ void main()
 `;
 
 const DEVELOP_BODY = `
-uniform sampler2D Previous;  //( dye dose, stop dose ), same raster
+uniform sampler2D Previous;  //( cyan, magenta, yellow dye doses, stop dose ), same raster
 uniform vec2 Size;           //the raster, pixels
 uniform float AgeStart;      //film-seconds since the take, at this frame's start
 uniform float DAge;          //film-seconds this frame
-uniform float KDye;          //the dye's Arrhenius rate, 1 at 24 degC
+uniform vec3 KDye;           //each dye layer's Arrhenius rate, 1 at 24 degC
 uniform float KStop;         //the timing layer's
 uniform float StopDose;      //when development ends, stop-seconds
 
@@ -290,7 +290,7 @@ out vec4 fragColor;
 void main()
 {
 	ivec2 p   = ivec2( gl_FragCoord.xy );
-	vec2 dose = texelFetch( Previous, p, 0 ).rg;
+	vec4 dose = texelFetch( Previous, p, 0 );
 
 	//This texel's place on the film. The source raster is the whole clip
 	//frame; the image window shows its centre, so film coordinates are the
@@ -303,7 +303,7 @@ void main()
 
 	if( s > reachAt( u ) )
 	{
-		fragColor = vec4( dose, 0.0, 1.0 );
+		fragColor = dose;
 		return;
 	}
 
@@ -315,9 +315,10 @@ void main()
 
 	//The timing layer runs on; the dye moves only until the stop, and on
 	//the frame that crosses it only for the part of the frame before it.
+	//Each layer at its own rate.
 	float dStop = KStop * overlap;
-	float part  = dStop > 0.0 ? clamp( ( StopDose - dose.y ) / dStop, 0.0, 1.0 ) : 0.0;
-	fragColor   = vec4( dose.x + KDye * overlap * part, dose.y + dStop, 0.0, 1.0 );
+	float part  = dStop > 0.0 ? clamp( ( StopDose - dose.w ) / dStop, 0.0, 1.0 ) : 0.0;
+	fragColor   = vec4( dose.xyz + KDye * overlap * part, dose.w + dStop );
 }
 `;
 
@@ -338,7 +339,7 @@ void main()
 `;
 
 const PRINT_BODY = `
-uniform sampler2D Dose;      //( dye dose, stop dose )
+uniform sampler2D Dose;      //( cyan, magenta, yellow dye doses, stop dose )
 uniform sampler2D Capture;   //linear light at the take
 uniform sampler2D Source;    //the host's input, for Mix and the viewfinder
 uniform sampler2D Meter;     //the meter's reading, at its top mip level
@@ -440,14 +441,14 @@ void main()
 	depth *= 1.0 - Roller * kRollerDepth * across * marks;
 
 	//Development so far.
-	vec2 dose = texture( Dose, q ).rg;
+	vec4 dose = texture( Dose, q );
 	vec3 tau  = Tau;
 	if( ( Perturb & 1 ) != 0 )
 		tau = vec3( Tau.g );
 	if( ( Perturb & 8 ) != 0 )
 		tau.r *= 1.1;
-	vec3 D = Balance * dinf * depth * ( 1.0 - exp( -dose.x / tau ) );
-	vec3 O = vec3( kOpacifierR, kOpacifierG, kOpacifierB ) * exp( -dose.y / TauOp );
+	vec3 D = Balance * dinf * depth * ( 1.0 - exp( -dose.xyz / tau ) );
+	vec3 O = vec3( kOpacifierR, kOpacifierG, kOpacifierB ) * exp( -dose.w / TauOp );
 
 	if( Probe == 1 )
 	{
@@ -499,6 +500,7 @@ MODEL_H.kGasConstant = 8.314462618;
 MODEL_H.kReferenceC = 24.0;
 MODEL_H.kDyeActivation = 67410.0;
 MODEL_H.kStopActivation = 0.5 * MODEL_H.kDyeActivation;
+MODEL_H.kCastFitC = 6.0;
 MODEL_H.kTauMono = 90.0;
 MODEL_H.kTauOpacifier = 45.0;
 MODEL_H.kStopDose = 600.0;
@@ -522,6 +524,7 @@ MODEL_H.kShortReach = 1.04;
 MODEL_H.kShortCorner = 0.28;
 MODEL_H.kNominalFrame = 1.0 / 60.0;
 MODEL_H.kMaxFrameDelta = 0.25;
+MODEL_H.kLayerActivation = [103600.0, 106850.0, 67410.0];
 MODEL_H.kTauColour = [70.0, 120.0, 200.0];
 MODEL_H.kTauVintage = [90.0, 170.0, 230.0];
 MODEL_H.kOpacifier = [Math.fround(1.90), Math.fround(1.55), Math.fround(1.80)];
@@ -646,7 +649,7 @@ const PROBE = 0;
 const telemetry = {
   ticked: false,
   now: 0, dt: 0, age: 0, dAge: 0, mode: 1, hasPrint: false, takes: 0,
-  sinceTake: 0, interval: 16, speed: 64, celsius: 24, kDye: 1, kStop: 1,
+  sinceTake: 0, interval: 16, speed: 64, celsius: 24, kDye: [1, 1, 1], kStop: 1,
   meterMean: null, width: 0, height: 0, resamples: 0,
   exactVerdict: '', missing: [],
 };
@@ -673,11 +676,11 @@ const hooks = { afterRender: null, fresh: null };
 
 function createRenderer(gl, quad) {
   // The kit asks for EXT_color_buffer_float (needFloat); this one is asked for
-  // here. The print pass samples the RG32F dose with linear filtering, and the
+  // here. The print pass samples the RGBA32F dose with linear filtering, and the
   // meter's R32F mip chain cannot be generated without it: a page that ran
   // anyway would print from zero dose and read a meter of nothing.
   if (!gl.getExtension('OES_texture_float_linear')) {
-    throw new GLError('OES_texture_float_linear is missing. The plugin filters its RG32F development state and averages its R32F meter through a mip chain, and without it both would silently read zero.');
+    throw new GLError('OES_texture_float_linear is missing. The plugin filters its RGBA32F development state and averages its R32F meter through a mip chain, and without it both would silently read zero.');
   }
 
   // The plugin's exact constants text, tried and reported, never used: see
@@ -783,7 +786,7 @@ function createRenderer(gl, quad) {
   const rescale = (width, height) => {
     const items = [
       { get: () => capture, put: (b) => { capture = b; }, format: gl.RGBA16F },
-      { get: () => dose[current], put: (b) => { dose[current] = b; }, format: gl.RG32F },
+      { get: () => dose[current], put: (b) => { dose[current] = b; }, format: gl.RGBA32F },
     ];
     for (const item of items) {
       const b = item.get();
@@ -859,8 +862,12 @@ function createRenderer(gl, quad) {
         age += dAge;
       }
 
+      // Each dye layer at its own activation energy; the black-and-white
+      // stock's one image at the chart's; bit 256 is v0.1.0's shared figure.
       const noArrhenius = (PERTURB & 4) !== 0;
-      const kDye = noArrhenius ? 1.0 : controls.arrheniusFactor(celsius, MODEL_H.kDyeActivation);
+      const sharedEa = (PERTURB & 256) !== 0 || MODEL_H.kStocks[film].mono;
+      const kDye = [0, 1, 2].map((i) => (noArrhenius ? 1.0
+        : controls.arrheniusFactor(celsius, sharedEa ? MODEL_H.kDyeActivation : MODEL_H.kLayerActivation[i])));
       const kStop = noArrhenius ? 1.0 : controls.arrheniusFactor(celsius, MODEL_H.kStopActivation);
 
       //------------------------------------------------------------------
@@ -873,8 +880,8 @@ function createRenderer(gl, quad) {
       lastHeight = height;
 
       ensure(capture, width, height, gl.RGBA16F);
-      ensure(dose[0], width, height, gl.RG32F);
-      ensure(dose[1], width, height, gl.RG32F);
+      ensure(dose[0], width, height, gl.RGBA32F);
+      ensure(dose[1], width, height, gl.RGBA32F);
       ensure(meter, MODEL_H.kMeterSize, MODEL_H.kMeterSize, gl.R32F);
 
       // A fresh print has no reagent anywhere.
@@ -934,7 +941,7 @@ function createRenderer(gl, quad) {
         developShader.set('Size', f(width), f(height));
         developShader.set('AgeStart', f(ageStart));
         developShader.set('DAge', f(dAge));
-        developShader.set('KDye', f(kDye));
+        developShader.set('KDye', f(kDye[0]), f(kDye[1]), f(kDye[2]));
         developShader.set('KStop', f(kStop));
         developShader.set('StopDose', f(MODEL_H.kStopDose));
         developShader.set('CropScale', cropX, cropY);
@@ -1065,7 +1072,7 @@ const demo = mountDemo({
   blurb:
     'It is Instant’s own GLSL — the capture, meter, develop, resample and print passes and the model library they share — ported from the repository to WebGL2, so the capture, the camera’s meter, the dye and stop doses and the print run on your GPU over the plugin’s own float buffers. The CPU half (the clock and the film age, the take, the Arrhenius factors, the print’s layout, the stock arithmetic and every control’s law) is ported to JavaScript by hand; nothing checks that port but a reader. It runs on generated clips in this page, with the plugin’s own parameters and no install.',
 
-  // The capture is RGBA16F, the doses RG32F and the meter R32F render
+  // The capture is RGBA16F, the doses RGBA32F and the meter R32F render
   // targets, as in the plugin.
   needFloat: true,
   // Outside the print (Border above 0) the output is colour 0 and alpha 0,
@@ -1077,7 +1084,7 @@ const demo = mountDemo({
       'The stock. Colour: three dye layers, cyan 70 s, magenta 120 s, yellow 200 s at 24 °C, a four-stop latitude. Black & White: one image layer by luminance, τ 90 s, a longer latitude and deeper black. Vintage: slower warm layers (90, 170, 230 s), a shorter latitude, a warm base stain and weaker cyan. Every τ is the plugin’s stated assumption, not a measurement.'),
     std('temperature', 'Temperature', controls.temperatureParam(MODEL_H.kReferenceC), 'Film', {
       display: (v) => `${controls.temperatureC(v).toFixed(1)} °C`,
-      hint: '4 to 36 °C, linear; 0.625 is exactly 24 °C, the reference every τ is stated at. Each rate is an Arrhenius factor: the dye’s at 67.41 kJ/mol (fitted to a published black-and-white development chart, an assumption for dye), the timing layer’s at half that (assumed). Cold, the dye slows more than the stop does, so development ends short: a light, low-contrast print with a cyan cast in this model (the manufacturer’s page describes the cold cast as green; the cyan is the model’s). Hot, all three layers finish: warmer. It changes the print that is developing, too.',
+      hint: '4 to 36 °C, linear; 0.625 is exactly 24 °C, the reference every τ is stated at. Each rate is an Arrhenius factor, one per dye layer: yellow at 67.41 kJ/mol (fitted to a published black-and-white development chart, an assumption for dye), cyan at 103.6 and magenta at 106.85 (fitted to the manufacturer’s description of a cold print, not measured), the timing layer at half the chart’s figure (assumed). Cold, the dyes slow more than the stop does and magenta most, so development ends short: a light, low-contrast print with a green tint, as the manufacturer describes. Hot, all three layers finish and the slow yellow over-reaches: a warm yellow-red. It changes the print that is developing, too.',
     }),
     std('expired', 'Expired', 0.0, 'Film', {
       display: (v) => `${(100 * controls.expired(v)).toFixed(0)}%`,
@@ -1140,14 +1147,14 @@ const demo = mountDemo({
     'The CPU half of this plugin is a PORT, not the plugin’s own code. Instant keeps its clock and state in C++: the film age since the take in double, the take’s edge trigger and the Continuous interval, the two Arrhenius factors, the buffers and when they are cleared, the resample-and-swap that carries the print across a resize, the print’s layout in millimetres and the crop, the stock arithmetic (Expired’s losses and stain, the balance that makes a neutral grey neutral at the stop) and every slider’s law in Controls.cpp. All of that is ported here line for line, in JavaScript doubles as the plugin keeps them, rounded to float where the plugin hands a float uniform over; Model.h’s numbers are copied by a script. Nothing checks a port but a reader; the repository’s intest --develop, --order, --arrhenius, --front, --roller, --take and --meter check the C++ against the model’s statement and have never heard of this page.',
     'The shaders are not a port. The vertex shader, the model library and the capture, meter, develop, resample and print bodies are the plugin’s own GLSL, assembled as Shaders.cpp assembles them, after the constants block the plugin writes from Model.h at run time — the same text, which demo/tools/check_shaders.py compares, whole and assembled, with what the plugin compiles, and which fails the repository’s verify script if a character drifts.',
     `One spelling in that constants block is the page’s. The plugin prints Model.h’s numbers with C’s %.9g, so ${RESPELT.length} integer-valued floats come out as integers (${RESPELT.join(', ')}: “const float kKnee = 6;”). Desktop GLSL 4.10 converts the int to float; GLSL ES 3.00 has no implicit conversions and refuses the line. The page tries the plugin’s exact text on every load and reports the compiler’s verdict under the picture, then compiles those lines — and only lines of exactly that shape — spelt with a “.0”. Each is the same float; no other character of any shader changes.`,
-    'The buffers are the plugin’s: the capture RGBA16F, two RG32F dose buffers ping-ponged, all linear-sampled, and the camera’s meter a 64 × 64 R32F averaged through its mip chain to one texel. WebGL2 needs EXT_color_buffer_float to render into them and OES_texture_float_linear to filter them and build the mip chain; the page refuses to start without either rather than fall back to 8 bits. The meter’s average is the browser’s glGenerateMipmap, as the plugin’s is the driver’s; on a textured frame two drivers need not average identically.',
+    'The buffers are the plugin’s: the capture RGBA16F, two RGBA32F dose buffers ping-ponged, all linear-sampled, and the camera’s meter a 64 × 64 R32F averaged through its mip chain to one texel. WebGL2 needs EXT_color_buffer_float to render into them and OES_texture_float_linear to filter them and build the mip chain; the page refuses to start without either rather than fall back to 8 bits. The meter’s average is the browser’s glGenerateMipmap, as the plugin’s is the driver’s; on a textured frame two drivers need not average identically.',
     'The clock is the kit’s, in declared seconds; the plugin’s unit vote and its wall-clock fallback never run. Everything downstream is the plugin’s rule: dt is the frame delta clamped to 0–0.25 s (the kit itself caps a delta at 0.1 s), a nominal 1/60 on the first frame, and the print ages dt × Speed film-seconds. A paused page renders only when a control moves, and each such frame is worth 0 s, so a paused print holds, as in a paused host (a real print would go on developing). Restart sends the clock back to 0, which the plugin reads as a host clock running backwards: the interval restarts and the print is kept. Step adds exactly 1/60 s.',
     'Take is FF_TYPE_EVENT in the plugin. The kit has no control for an event, so it is the button under the picture rather than a row in the inspector. A press is delivered as the plugin’s SetFloatParameter delivers it — 1.0 then 0.0, edge-triggered on the crossing of 0.5 — and consumed on the next rendered frame: in Take mode it takes the print, in Continuous mode it takes at once and restarts the interval. In embed mode there is no button, so Take mode stays a viewfinder there.',
-    'The chemistry’s numbers are the plugin’s stated model, not measurements of a film: the dye activation energy is fitted to a published black-and-white development chart (an assumption for dye), and the timing layer’s activation energy, every time constant, the stop at 600 s, the front speed, the roller, the curve, the densities and the colours are assumptions, chosen and judged by eye. The cold print’s cast is cyan in this model; the manufacturer describes it as green.',
+    'The chemistry’s numbers are the plugin’s stated model, not measurements of a film: the yellow layer’s activation energy is fitted to a published black-and-white development chart (an assumption for dye), the cyan and magenta layers’ to the manufacturer’s description of a cold print’s green tint (a fit to words, not to a measurement), and the timing layer’s activation energy, every time constant, the stop at 600 s, the front speed, the roller, the curve, the densities and the colours are assumptions, chosen and judged by eye.',
     'The reagent front is modelled (each row starts developing at its distance from the pod over the front’s speed, one image height a film-second) but it is not something you can watch: it crosses the print in about one film-second, under an opacifier that takes about a minute to clear, at every Speed.',
     'The plugin stores each host value as a float; the page’s sliders are doubles, so every value is rounded through Math.fround before its law is applied, and the defaults are the plugin’s float defaults (Temperature 0.625 = 24 °C, Interval 0.625 = 16 s, Speed 0.75 = 64×, Mode Continuous).',
     'The harness-only Perturb and Probe uniforms are set to what the shipped plugin sets them to, 0. The eight negative controls and the raw density probe intest reads through them are not on this page. The About block is absent, as on every page in this suite.',
-    'The plugin’s proof — each dye layer’s τ fitted out of the picture, cyan leading at 240 s and the balance moving only toward neutral, the Arrhenius ratio between 14 and 34 °C, each row starting at distance over speed, the roller’s period whole-pixel and fractional, a print that develops from its capture whatever the clip does and survives a resize, the meter — is an offline harness in the repository, at two rasters and on a software renderer. Nothing on this page measures anything; the line under the picture reports what the ported clock and take are doing.',
+    'The plugin’s proof — each dye layer’s τ fitted out of the picture, cyan leading at 240 s and the balance moving only toward neutral, each layer’s Arrhenius ratio between 14 and 34 °C, a neutral grey green when cold, neutral at 24 °C and warm when hot, each row starting at distance over speed, the roller’s period whole-pixel and fractional, a print that develops from its capture whatever the clip does and survives a resize, the meter — is an offline harness in the repository, at two rasters and on a software renderer. Nothing on this page measures anything; the line under the picture reports what the ported clock and take are doing.',
   ],
 
   createRenderer,
@@ -1210,7 +1217,7 @@ if (demo && !new URLSearchParams(window.location.search).has('embed')) {
         })();
       line.textContent =
         `${modeText}. ${t.hasPrint ? `Print ${t.age.toFixed(1)} film-s old (${Math.min(100, (100 * t.age) / stopAt).toFixed(0)}% of the way to the stop at ${stopAt.toFixed(0)} film-s, at the pod edge)` : 'No print'}; `
-        + `${speedText(t.speed)}, ${t.celsius.toFixed(1)} °C (dye rate ×${t.kDye.toFixed(3)}, stop ×${t.kStop.toFixed(3)}); meter at the take: ${meterText}; `
+        + `${speedText(t.speed)}, ${t.celsius.toFixed(1)} °C (dye rates C ×${t.kDye[0].toFixed(3)} M ×${t.kDye[1].toFixed(3)} Y ×${t.kDye[2].toFixed(3)}, stop ×${t.kStop.toFixed(3)}); meter at the take: ${meterText}; `
         + `clock ${t.now.toFixed(3)} s, this frame ${t.dt.toFixed(4)} s = ${t.dAge.toFixed(3)} film-s; ${t.width} × ${t.height}; ${t.takes} take${t.takes === 1 ? '' : 's'}`
         + `${t.missing.length ? `; UNMATCHED UNIFORMS: ${t.missing.join(', ')}` : ''}.`;
       verdict.textContent = `Constants block: ${t.exactVerdict}.`;

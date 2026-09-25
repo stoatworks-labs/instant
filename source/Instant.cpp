@@ -26,7 +26,7 @@ static CFFGLPluginInfo PluginInfo(
 	0,                                                           // Plugin major version number
 	1,                                                           // Plugin minor version number
 	FF_EFFECT,                                                   // Plugin type
-	"Instant film, developing in front of you.\n\nA Take exposes the clip's frame onto an integral instant print. The rollers spread the reagent up from the pod at the bottom border, and the picture comes up over minutes from a dark green-grey, pale and cyan first, warming as the magenta and yellow dyes arrive: each dye layer first-order, at a rate set by an Arrhenius temperature law. Cold film is slow and cyan, hot film fast and warm; a short spread leaves the corners dark, a dirty roller repeats its mark. Speed scales time for live use; 1x is a real print.",// Plugin description
+	"Instant film, developing in front of you.\n\nA Take exposes the clip's frame onto an integral instant print. The rollers spread the reagent up from the pod at the bottom border, and the picture comes up over minutes from a dark green-grey, pale and cyan first, warming as the magenta and yellow dyes arrive: each dye layer first-order, at a rate set by an Arrhenius temperature law. Cold film is slow, pale and green, hot film fast and warm; a short spread leaves the corners dark, a dirty roller repeats its mark. Speed scales time for live use; 1x is a real print.",// Plugin description
 	"Instant FFGL effect"                                        // About
 );
 
@@ -257,7 +257,7 @@ bool Instant::rescale( int width, int height )
 		PassBuffer* buffer;
 		GLint format;
 	};
-	const Item items[] = { { &capture, GL_RGBA16F }, { &dose[ current ], GL_RG32F } };
+	const Item items[] = { { &capture, GL_RGBA16F }, { &dose[ current ], GL_RGBA32F } };
 	for( const Item& item : items )
 	{
 		PassBuffer& b = *item.buffer;
@@ -366,9 +366,15 @@ FFResult Instant::ProcessOpenGL( ProcessOpenGLStruct* pGL )
 		age += dAge;
 	}
 
+	//Each dye layer at its own activation energy; the black-and-white stock's
+	//one image at the chart's. The negative control puts every layer back on
+	//v0.1.0's shared figure.
 	const bool noArrhenius = ( perturb & model::kPerturbNoArrhenius ) != 0;
-	const double kDye      = noArrhenius ? 1.0 : controls::ArrheniusFactor( celsius, model::kDyeActivation );
-	const double kStop     = noArrhenius ? 1.0 : controls::ArrheniusFactor( celsius, model::kStopActivation );
+	const bool sharedEa    = ( perturb & model::kPerturbSharedActivation ) != 0 || model::kStocks[ film ].mono;
+	double kDye[ 3 ];
+	for( int i = 0; i < 3; ++i )
+		kDye[ i ] = noArrhenius ? 1.0 : controls::ArrheniusFactor( celsius, sharedEa ? model::kDyeActivation : model::kLayerActivation[ i ] );
+	const double kStop = noArrhenius ? 1.0 : controls::ArrheniusFactor( celsius, model::kStopActivation );
 
 	//---------------------------------------------------------------------
 	// Buffers. Every allocation happens here, before anything binds a
@@ -392,8 +398,8 @@ FFResult Instant::ProcessOpenGL( ProcessOpenGLStruct* pGL )
 	lastHeight = height;
 
 	if( !capture.Ensure( width, height, GL_RGBA16F, PassBuffer::Sampling::Linear )
-	    || !dose[ 0 ].Ensure( width, height, GL_RG32F, PassBuffer::Sampling::Linear )
-	    || !dose[ 1 ].Ensure( width, height, GL_RG32F, PassBuffer::Sampling::Linear )
+	    || !dose[ 0 ].Ensure( width, height, GL_RGBA32F, PassBuffer::Sampling::Linear )
+	    || !dose[ 1 ].Ensure( width, height, GL_RGBA32F, PassBuffer::Sampling::Linear )
 	    || !meter.Ensure( model::kMeterSize, model::kMeterSize, GL_R32F, PassBuffer::Sampling::Mipmapped ) )
 	{
 		diag::error( "could not allocate the print buffers at " + std::to_string( width ) + "x" + std::to_string( height ) );
@@ -469,7 +475,7 @@ FFResult Instant::ProcessOpenGL( ProcessOpenGLStruct* pGL )
 			developShader.Set( "Size", static_cast< float >( width ), static_cast< float >( height ) );
 			developShader.Set( "AgeStart", static_cast< float >( ageStart ) );
 			developShader.Set( "DAge", static_cast< float >( dAge ) );
-			developShader.Set( "KDye", static_cast< float >( kDye ) );
+			developShader.Set( "KDye", static_cast< float >( kDye[ 0 ] ), static_cast< float >( kDye[ 1 ] ), static_cast< float >( kDye[ 2 ] ) );
 			developShader.Set( "KStop", static_cast< float >( kStop ) );
 			developShader.Set( "StopDose", static_cast< float >( model::kStopDose ) );
 			developShader.Set( "CropScale", cropX, cropY );
@@ -648,7 +654,7 @@ size_t Instant::StateBytesForTest() const
 			bytes += static_cast< size_t >( b.GetWidth() ) * b.GetHeight() * perTexel;
 	};
 	count( capture, 8 );
-	count( dose[ 0 ], 8 );
-	count( dose[ 1 ], 8 );
+	count( dose[ 0 ], 16 );
+	count( dose[ 1 ], 16 );
 	return bytes;
 }

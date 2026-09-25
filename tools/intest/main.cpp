@@ -907,7 +907,8 @@ int runArrhenius( int W, int H, int perturb, bool quiet = false )
 	int failures = 0;
 	for( int L = 0; L < 4; ++L )
 	{
-		const double ea    = L < 3 ? model::kDyeActivation : model::kStopActivation;
+		//Each dye layer at its own stated activation energy (the colour stock).
+		const double ea    = L < 3 ? model::kLayerActivation[ L ] : model::kStopActivation;
 		const double want  = std::exp( ea / model::kGasConstant * ( 1.0 / ( cold + 273.15 ) - 1.0 / ( hot + 273.15 ) ) );
 		const double ratio = tau[ 0 ][ L ] / tau[ 1 ][ L ];
 		//A ratio of two fitted taus, each known to rel: the ratio to the sum.
@@ -1013,6 +1014,95 @@ int runOrder( int W, int H, int perturb, bool quiet = false )
 		std::printf( "   the balance rose by %.2e at frame %d (tolerance %.1e)\n", worstRise, worstStep, tolAtWorst );
 	failures += report( rises == 0, quiet, "from %.0f s the balance moves only toward neutral: %d of %d steps rose", early, rises, samples - 1 );
 	failures += report( final <= finalTol, quiet, "at %.0f s, past the stop, the print is neutral: %.2e (tolerance %.1e)", fEnd * filmPerFrame( speed ), final, finalTol );
+	return failures;
+}
+
+
+//---------------------------------------------------------------------------
+// --cast
+//---------------------------------------------------------------------------
+
+/// What temperature does to a neutral grey once development is over, out of
+/// the PICTURE. The manufacturer's support page: below 13 degC a green tint,
+/// above 28 degC a yellow/red one; at the reference the film is balanced.
+/// Green is G above both R and B; warm is R above B; each by kCastMargin in
+/// density, a tint a viewer sees on a neutral: 0.02 is 4.7% in reflectance,
+/// about three 8-bit levels at mid grey. It is a statement of "visible", not
+/// a number read off this machine's output.
+constexpr double kCastMargin = 0.02;
+
+int runCast( int W, int H, int perturb, bool quiet = false )
+{
+	const double speed = 256.0;
+	//The pixel and its shine, as --order's: near the bottom-left corner.
+	const int col = std::max( 1, W / 10 );
+	const int row = H - 1 - std::max( 1, H / 10 );
+	const double px    = ( col + 0.5 ) / H, py = ( H - 1 - row + 0.5 ) / H;
+	const double band  = ( px + py - 0.95 ) / 0.22;
+	const double shine = 0.012 * std::exp( -band * band );
+	if( !quiet )
+		std::printf( "cast: a neutral patch at sRGB %.2f, colour film, %gx, read from the picture after the stop and the opacifier, %dx%d\n", kPatch, speed, W, H );
+
+	struct Case
+	{
+		double celsius;
+		int kind;//-1 cold, 0 reference, 1 hot
+	};
+	const Case cases[] = { { 4.0, -1 }, { model::kCastFitC, -1 }, { 12.0, -1 }, { model::kReferenceC, 0 }, { 30.0, 1 }, { 34.0, 1 }, { 36.0, 1 } };
+	int failures = 0;
+	for( const Case& c : cases )
+	{
+		Session s;
+		Knobs k;
+		k.celsius = c.celsius;
+		k.speed   = speed;
+		apply( s.plugin, k );
+		s.plugin.SetPerturbForTest( perturb );
+		press( s.plugin );
+		if( !s.begin( W, H ) )
+			return failures + 1;
+		//Past the stop at this temperature (the front arrives within a
+		//film-second), then ten opacifier time constants, so what is left of
+		//it, e^-10 of O0, is inside the tolerance below.
+		const double kStop = controls::ArrheniusFactor( c.celsius, model::kStopActivation );
+		const double until = 1.0 + ( model::kStopDose + 10.0 * model::kTauOpacifier ) / kStop;
+		const int fEnd     = static_cast< int >( std::ceil( until / filmPerFrame( speed ) ) );
+		const Picture pic  = flat( W, H, kPatch );
+		for( int f = 0; f <= fEnd; ++f )
+			if( !s.render( f, pic ) )
+				return failures + 1;
+		const std::vector< float > p = s.readPixel( row, col );
+		s.end();
+		double d[ 3 ];
+		pictureDensities( p, d );
+		const double lo = std::min( { srgbDecode( p[ 0 ] ), srgbDecode( p[ 1 ] ), srgbDecode( p[ 2 ] ) } );
+		//Per channel, --order's: the density bound at Dmax, the encode's pow,
+		//the shine on the darkest channel; and the opacifier's residue.
+		const double tolD = densityError( fEnd, 1.65 ) + 32.0 * kU / kLn10 + shine / std::max( lo, 1e-6 ) / kLn10
+		                    + model::kOpacifier[ 0 ] * std::exp( -10.0 );
+		const int r8 = static_cast< int >( std::lround( p[ 0 ] * 255.0 ) ), g8 = static_cast< int >( std::lround( p[ 1 ] * 255.0 ) ),
+		          b8 = static_cast< int >( std::lround( p[ 2 ] * 255.0 ) );
+		if( c.kind < 0 )
+		{
+			const double overR = d[ 0 ] - d[ 1 ], overB = d[ 2 ] - d[ 1 ];
+			failures += report( overR >= kCastMargin + 2.0 * tolD && overB >= kCastMargin + 2.0 * tolD, quiet,
+			                    "%4.1f degC cold, green: G above R by %.4f and above B by %.4f in density (margin %.2f + %.1e); 8-bit (%d, %d, %d)", c.celsius,
+			                    overR, overB, kCastMargin, 2.0 * tolD, r8, g8, b8 );
+		}
+		else if( c.kind > 0 )
+		{
+			const double overB = d[ 2 ] - d[ 0 ];
+			failures += report( overB >= kCastMargin + 2.0 * tolD, quiet,
+			                    "%4.1f degC hot, warm: R above B by %.4f in density (margin %.2f + %.1e), G - B %.4f; 8-bit (%d, %d, %d)", c.celsius, overB,
+			                    kCastMargin, 2.0 * tolD, d[ 2 ] - d[ 1 ], r8, g8, b8 );
+		}
+		else
+		{
+			const double spread = std::max( { d[ 0 ], d[ 1 ], d[ 2 ] } ) - std::min( { d[ 0 ], d[ 1 ], d[ 2 ] } );
+			failures += report( spread <= 2.0 * tolD, quiet, "%4.1f degC reference, neutral at completion: the balance is off by %.2e (tolerance %.1e); 8-bit (%d, %d, %d)",
+			                    c.celsius, spread, 2.0 * tolD, r8, g8, b8 );
+		}
+	}
 	return failures;
 }
 
@@ -1414,6 +1504,7 @@ int runNegative( int W, int H )
 		{ model::kPerturbResizeClears, "a resize that clears the print", runTake, "--take" },
 		{ model::kPerturbLiveCapture, "a capture that follows the clip", runTake, "--take" },
 		{ model::kPerturbNoMeter, "the camera's meter ignored", runMeter, "--meter" },
+		{ model::kPerturbSharedActivation, "v0.1.0's one activation energy for every dye", runCast, "--cast" },
 	};
 	int failures = 0;
 	for( const Control& c : controls )
@@ -1587,7 +1678,7 @@ int runBench( Instant& plugin, int frames, double fps )
 		             ms / 16.667 * 100.0, static_cast< double >( bytes ) / 1048576.0 );
 	}
 	std::printf( "\nState is three picture-sized buffers at 8 bytes a texel: the capture (RGBA16F)\n"
-	             "and both halves of the development state (RG32F), colour textures only. The\n"
+	             "and both halves of the development state (RGBA32F), colour textures only. The\n"
 	             "SDK's FBO attaches a depth renderbuffer to each that the plugin never uses and\n"
 	             "this does not count. Whatever the settings above were, they are what was\n"
 	             "measured; --set measures another. A take costs one capture pass more.\n" );
@@ -1719,7 +1810,8 @@ void usage()
 		"  checks that render, at --size:\n"
 		"  --develop           each dye layer follows its first-order law with the stated tau\n"
 		"  --order             cyan leads at the stated early time; the balance then goes to neutral\n"
-		"  --arrhenius         tau at 14 and 34 degC has the Arrhenius ratio, every layer\n"
+		"  --arrhenius         tau at 14 and 34 degC has each layer's own Arrhenius ratio\n"
+		"  --cast              a neutral grey after the stop: green cold, neutral at 24 degC, warm hot\n"
 		"  --front             a point starts developing distance / front speed after the take\n"
 		"  --roller            the dirty roller repeats at its circumference, whole and fractional\n"
 		"  --take              the print develops from the captured frame; a resize keeps it\n"
@@ -1758,7 +1850,7 @@ int main( int argc, char** argv )
 	std::vector< std::string > settings;
 	std::vector< std::string > checks;
 
-	const std::set< std::string > rendered = { "--develop", "--order", "--arrhenius", "--front", "--roller", "--take", "--meter", "--negative" };
+	const std::set< std::string > rendered = { "--develop", "--order", "--arrhenius", "--front", "--roller", "--take", "--meter", "--cast", "--negative" };
 	const std::set< std::string > offline  = { "--names" };
 
 	for( int i = 1; i < argc; ++i )
@@ -1886,6 +1978,8 @@ int main( int argc, char** argv )
 						runTake( width, height, perturb );
 					else if( check == "--meter" )
 						runMeter( width, height, perturb );
+					else if( check == "--cast" )
+						runCast( width, height, perturb );
 					else if( check == "--negative" )
 						runNegative( width, height );
 					else

@@ -26,11 +26,11 @@
 
 	**Development.** Each dye layer approaches Dinf first-order:
 
-	    D( t ) = Dinf ( 1 - e^( -A / tau_i ) ),  A = the dye dose, in seconds at 24 degC,
+	    D( t ) = Dinf ( 1 - e^( -A_i / tau_i ) ),  A_i = the layer's dye dose, in seconds at 24 degC,
 
-	where A is the time since the reagent front reached the point, each
-	film-second weighted by the Arrhenius rate at the temperature it passed at
-	(A = t - t0 at 24 degC). The same reagent carries the OPACIFIER, a dark
+	where A_i is the time since the reagent front reached the point, each
+	film-second weighted by the layer's Arrhenius rate at the temperature it
+	passed at (A_i = t - t0 at 24 degC). The same reagent carries the OPACIFIER, a dark
 	layer that shields the negative from light while it develops, which clears
 	as the timing layer drops the pH:
 
@@ -38,14 +38,17 @@
 	                                     timing layer's own (lower) Arrhenius rate.
 
 	The same pH drop ENDS development: once S reaches `kStopDose` no dye moves
-	any more. So temperature changes the picture and not only the speed. Cold,
-	the dye slows more than the timing layer does and development ends before
-	the slow yellow layer has arrived: a cyan cast, lower contrast, a lighter
-	print. Hot, the dyes all but finish: a warm cast. The manufacturer's support
-	page (see ATTRIBUTIONS.md) describes the cold print as light and low in
-	contrast, as here, but with a GREEN tint, not a cyan one, and the hot print
-	as yellow/red; the cold cast here is the model's, not the page's. The
-	numbers below that produce them are assumptions, stated as such.
+	any more. So temperature changes the picture and not only the speed.
+	Each dye layer has its OWN activation energy (`kLayerActivation`), so each
+	layer's dose A_i is its own sum of film-seconds, weighted by its own rate.
+	Cold, the dyes slow more than the timing layer does, and development ends
+	short: a lighter print, lower in contrast. Magenta slows the most, so it is
+	cut shortest and the grey comes out GREEN, as the manufacturer's support
+	page (see ATTRIBUTIONS.md) says of a cold print. Hot, every layer all but
+	finishes and the slow yellow over-reaches its balance: a warm yellow/red
+	cast, as the page says of a hot one. Two of the three activation energies
+	are FITTED to that page's description (tools/cast_fit.py), not measured;
+	they are stated as such below.
 
 	**Presentation.** The print is seen by reflection off the reagent's white
 	pigment, through the dye image and the opacifier:
@@ -70,9 +73,25 @@ constexpr double kReferenceC = 24.0;
 constexpr double kDyeActivation = 67410.0;
 
 /// Activation energy of the timing layer (the stop and the opacifier's
-/// clearing), J / mol. ASSUMED: half the dye figure, because it is a
+/// clearing), J / mol. ASSUMED: half the chart's dye figure, because it is a
 /// diffusion through a polymer layer, not a chemical step. No source.
 constexpr double kStopActivation = 0.5 * kDyeActivation;
+
+/// Each dye layer's activation energy, J / mol: cyan, magenta, yellow.
+/// Yellow keeps the chart's figure above. Cyan and magenta are FITTED by
+/// tools/cast_fit.py to the manufacturer's DESCRIPTION of a cold print (a
+/// green tint), not to any measurement: no published per-layer figure was
+/// found. The fit asks, at kCastFitC, a mid grey on the colour stock to come
+/// out with R = B (the hue exactly green) and with its dye balance off by as
+/// much as v0.1.0's shared activation energy put it off (the same strength of
+/// cast, turned from cyan to green). Rounded to 10 J/mol; verify.sh refuses a
+/// value the fit does not give. The black-and-white stock has one image and
+/// develops at the chart's figure, the process the chart is for.
+constexpr double kLayerActivation[ 3 ] = { 103600.0, 106850.0, 67410.0 };
+static_assert( kLayerActivation[ 2 ] == kDyeActivation, "yellow keeps the chart's figure" );
+/// The cold temperature the cast fit is made at, degC: well below the
+/// manufacturer's 13 degC, where the page describes the green tint.
+constexpr double kCastFitC = 6.0;
 
 /// Dye time constants at 24 degC, film seconds: cyan, magenta, yellow.
 /// ASSUMED, not measured. Chosen so that the order is the one the process is
@@ -194,6 +213,7 @@ enum Perturb : int
 	kPerturbResizeClears = 32, ///< a resize clears the print: --take fails
 	kPerturbLiveCapture  = 64, ///< the capture follows the clip: --take fails
 	kPerturbNoMeter      = 128,///< the meter is ignored: --meter fails
+	kPerturbSharedActivation = 256,///< v0.1.0: every dye layer at kDyeActivation: --cast fails cold
 };
 
 /// Probe hooks for the harness, 0 in the plugin: 1 makes the print pass

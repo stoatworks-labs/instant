@@ -13,6 +13,8 @@
 #   arrhenius     the committed activation energy is the least-squares fit of
 #                 the published time/temperature chart tools/arrhenius_fit.py
 #                 carries. Model.h holds the number; the script holds the data.
+#                 And the cyan and magenta layers' own activation energies are
+#                 tools/cast_fit.py's fit to the manufacturer's cold green tint.
 #   shaders       does every shader compile, through a real GLSL compiler,
 #                 before a host has to find out. The shaders are assembled at
 #                 run time from one model library, so the text compiled here is
@@ -31,7 +33,9 @@
 #                 out of the picture:
 #                   --develop    each dye layer's first-order law, its tau
 #                   --order      cyan leads at 240 s; the balance goes to neutral
-#                   --arrhenius  tau at 14 and 34 degC in the Arrhenius ratio
+#                   --arrhenius  tau at 14 and 34 degC in each layer's Arrhenius ratio
+#                   --cast       a grey after the stop: green cold, neutral at
+#                                24 degC, warm hot
 #                   --front      each row starts at distance / front speed
 #                   --roller     the mark repeats at the circumference,
 #                                whole-pixel and fractional
@@ -79,6 +83,11 @@ INTEST="$BUILD/intest"
 
 step "arrhenius fit"
 if out=$(python3 tools/arrhenius_fit.py --check 2>&1); then
+	pass "$out"
+else
+	fail "$out"
+fi
+if out=$(python3 tools/cast_fit.py --check 2>&1); then
 	pass "$out"
 else
 	fail "$out"
@@ -160,7 +169,7 @@ rm -rf "$dir"
 
 for size in 320x180 1280x720; do
 	step "physics at $size"
-	for check in develop order arrhenius front roller take meter negative; do
+	for check in develop order arrhenius cast front roller take meter negative; do
 		if out=$("$INTEST" --$check --size $size 2>&1); then
 			pass "intest --$check: $( printf '%s\n' "$out" | grep -v '^$' | tail -1 )"
 		else
@@ -175,7 +184,7 @@ done
 # resize check failed CI by one ulp), so a check that asserts exactness on this
 # Mac's GPU is found here before CI finds it.
 step "physics at 320x180 on the software renderer (CI's)"
-for check in develop order arrhenius front roller take meter negative; do
+for check in develop order arrhenius cast front roller take meter negative; do
 	if out=$(INTEST_RENDERER=software "$INTEST" --$check --size 320x180 2>&1); then
 		pass "intest --$check (software): $( printf '%s\n' "$out" | grep -v '^$' | tail -1 )"
 	else

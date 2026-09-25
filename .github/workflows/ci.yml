@@ -56,6 +56,7 @@ jobs:
           ./build/intest --develop   --size 320x180
           ./build/intest --order     --size 320x180
           ./build/intest --arrhenius --size 320x180
+          ./build/intest --cast      --size 320x180
           ./build/intest --front     --size 320x180
           ./build/intest --roller    --size 320x180
           ./build/intest --take      --size 320x180
@@ -63,7 +64,9 @@ jobs:
           ./build/intest --negative  --size 320x180
 
       - name: Activation energy
-        run: python3 tools/arrhenius_fit.py --check
+        run: |
+          python3 tools/arrhenius_fit.py --check
+          python3 tools/cast_fit.py --check
 
       - name: Controls
         # At 160x90 and two at a time, because the runner has no GPU and the
