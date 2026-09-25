@@ -293,6 +293,74 @@ consequences.
 
 ---
 
+## The browser demo
+
+`demo/` is the page at **instant-demo.stoatworks-labs.com** (2026-09-25), on the fleet's
+kit (`stoatworks-backend/resolume-demo`, vendored by its `sync.sh`; `instant` is not yet
+in that script's repo list, so `sync.sh --check` does not see it).
+
+**What is the plugin's.** Every GLSL string of `Shaders.cpp` — the version line, the
+vertex body, `kModel` and the capture, meter, develop, resample and print bodies — is
+spliced into `demo/plugin.js` by `demo/tools/sync_shaders.py`, tabs and comments
+included, with `K_CONSTANTS`: the text `constants()` writes from Model.h at run time
+(each `put` evaluated from Model.h, a float through binary32, printed with `%.9g`), plus
+every Model.h constant, the stocks and the Controls lists. `demo/tools/check_shaders.py
+--dump DIR` holds all of it to the C++ and compares every stage the page assembles with
+what the plugin compiled (`intest --dump-shaders DIR`), byte for byte; `tools/verify.sh`
+runs it. A shader change here means re-running the sync script, never an edit of the page.
+The buffers are the plugin's (RGBA16F capture, RG32F dose ping-pong, 64 × 64 R32F meter
+with its mip chain); the page refuses to start without `EXT_color_buffer_float` and
+`OES_texture_float_linear`.
+
+**One spelling is the page's.** `%.9g` prints `kFrontSpeed`, `kKnee` and `kMeterMaxGain` as
+`1`, `6` and `8`, and GLSL ES 3.00 has no implicit int-to-float conversion: ANGLE refuses
+`const float kKnee = 6;` ("cannot convert from 'const int' to 'const highp float'"). The
+page compiles the exact text once per load and reports the verdict under the picture,
+then compiles with lines of exactly the shape `const float kName = <integer>;` spelt
+`.0`. Same floats; no other character changes. (A `%.9g` that always printed a decimal
+point in `constants()` would make the exact text portable; not done here, it is a plugin
+change.)
+
+**What is a hand port, checked by nobody but a reader:** Controls.cpp (every law,
+`PrintLayout`, `ArrheniusFactor`, `OptionIndex`), the defaults from `Instant::Instant()`,
+and from `ProcessOpenGL` the clock (dt clamped to [0, 0.25 s], the nominal first frame),
+the take (edge trigger, Continuous interval, the backward-clock rule), the film age in
+double, the buffer ensures and clears, `rescale`, the crop, the stock arithmetic and
+every uniform. Change one of those here and change the page by hand.
+
+**What differs, each said on the page:** Take is a button under the picture (the kit has
+no event type); the clock is the kit's (no unit vote; a paused page renders dt = 0 frames,
+so a paused print holds; Restart is a backward clock, so the interval restarts and the
+print is kept; the kit caps a delta at 0.1 s); no About block; `Perturb` and `Probe` are
+0; the meter's mip average is the browser's; the reagent front is modelled but cannot be
+watched (it crosses in about a film-second under an opacifier that takes a minute).
+Clips are the kit's generated ones (moving scene first), never Resolume's.
+
+**Measured once (2026-09-25).** The page driven frame by frame at n / 60 from a fresh
+instance (`window.__instantDemo.hooks`: `fresh()`, and `afterRender` to read the canvas
+and the input inside the frame) on the Synthetic scene clip at 320x180, 120 frames,
+against `intest --pipe --fps 60` on the same input frames read back from the page, with
+the same values `--set`: at the defaults; at Vintage, 14 °C, Expired 0.5, Interval 1 s
+(a second take at frame 60), Exposure 0.7, Uneven, Dirty Roller 1, 256×, Border 0.6, Mix
+0.8; and in Take mode, Black & White, Short, 34 °C, 128×, Border 0, with Take pressed at
+frames 10 and 70 (`--script`). Through ANGLE on Metal: 8, 16 and 0 channel values of 27.6
+million differ, each by 1. Through SwiftShader: 22 518, 25 232 and 100 031, each by 1.
+It can fail, but by count more than by size, because the print is smooth: Temperature
+0.63 against 0.625 (24.16 against 24 °C) makes 1.1 million values differ, by 1; Exposure
+0.51 against 0.5 makes 1.95 million differ, up to 2/255 (3 on SwiftShader). A Take on a
+paused page moves the picture by a mean 13.4 levels, a Film change by 1.3, a resize from
+960x540 to 1280x720 mid-print keeps it (mean 52.87 → 52.83, one resample, no take).
+Driving trap: the kit redraws a paused page on every parameter change, so a set made after
+`fresh()` renders a stray frame at the old clock and takes a print there; set everything,
+let that frame render, then `fresh()`.
+
+Deploy: `cf-run npx wrangler deploy` from the repo root, or push to main
+(`.github/workflows/deploy.yml`). The host is a Worker **route** over a proxied
+`AAAA 100::` record made through the API on 2026-09-25, not a custom domain: the zone
+is at Cloudflare's limit of 100. Delete that record and the page goes dark while deploys
+stay green. Verify by content:
+`curl -s 'https://instant-demo.stoatworks-labs.com/?cb=1' | grep -o '<title>[^<]*'`.
+
 ## Decisions taken without asking
 
 - **Time is the host's.** Film age accumulates the host clock's frame deltas (clamped

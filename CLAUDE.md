@@ -108,6 +108,25 @@ the spread or the meter.
 - The user guide is `docs/USER-GUIDE.md` (the only copy anyone edits; the website builds
   the page and the PDF from it).
 
+## Browser demo
+
+`demo/` is the page at **instant-demo.stoatworks-labs.com**, deployed from
+`wrangler.toml` (a Worker route over a proxied `AAAA 100::` DNS record, not a
+custom domain) with `cf-run npx wrangler deploy` or by any push to main — no build
+step; what is committed is what is served. `demo/vendor/` is copied in by
+`~/Projects/infrastructure/stoatworks-backend/resolume-demo/sync.sh instant` and is not
+a place to edit.
+- **A shader or constant change in the plugin: `python3 demo/tools/sync_shaders.py`**
+  (splices Shaders.cpp's strings, the text `constants()` writes, Model.h's constants and
+  the Controls lists into `demo/plugin.js`), then
+  `python3 demo/tools/check_shaders.py --dump DIR` after `intest --dump-shaders DIR`
+  (verify.sh does both). Never hand-edit the generated block.
+- The page's CPU half (Controls.cpp's laws and layout, the clock, take, buffers and
+  uniforms of `ProcessOpenGL`) is a **hand port**; change it by hand with the C++. Only a
+  reader checks it. The defaults are hand-copied from `Instant::Instant()` too.
+- Verify a deploy **by content**:
+  `curl -s 'https://instant-demo.stoatworks-labs.com/?cb=1' | grep -o '<title>[^<]*'`.
+
 ## Diagnostics
 
 `source/Diag.{h,cpp}` — log file only, no crash handler (this runs inside Resolume).

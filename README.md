@@ -198,6 +198,20 @@ green. It was not changed; the guide says so. No number in the plugin comes from
   the rates behind them, not the casts.
 - No OpenFX port and no presets.
 
+## Browser demo
+
+[instant-demo.stoatworks-labs.com](https://instant-demo.stoatworks-labs.com/) runs the
+plugin's own capture, meter, develop, resample and print shaders in WebGL2, spliced in
+from `source/Shaders.cpp` by `demo/tools/sync_shaders.py` with the constants block the
+plugin writes from `Model.h`, and checked by `demo/tools/check_shaders.py` from
+`tools/verify.sh` against what `intest --dump-shaders` says the plugin compiles. So the
+camera's meter, the dye and stop doses and the print run on the GPU over the same float
+buffers. Its CPU half — the clock and the film age, the take, the Arrhenius factors, the
+print's layout and every control's law — is a hand port to JavaScript that only a reader
+checks, and the page says so. Driven frame by frame against `intest --pipe --fps 60` on
+the same input it agrees to 1/255 on every pixel. Take is a button under the picture.
+Generated clips only, or your own image or video, which never leaves the page.
+
 ## Build
 
 Needs CMake 3.15+, a C++17 compiler, and the FFGL SDK submodule.

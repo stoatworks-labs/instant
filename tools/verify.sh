@@ -20,6 +20,11 @@
 #                 plugin hands the driver. Then a grep for every GLSL 4.10
 #                 reserved word used as an identifier, because Apple's compiler
 #                 and glslc accept some (`packed`) that Mesa refuses.
+#   demo          the browser demo's copy of every shader, and of the constants
+#                 it hands them, is still the plugin's, character for character,
+#                 and every stage it assembles is what the plugin compiles
+#                 (demo/tools/check_shaders.py --dump). Says nothing about the
+#                 page's hand PORT of the CPU half; only a reader checks that.
 #   physics       every harness check, at TWO rasters: 320x180, which is what
 #                 CI renders at, and 1280x720 -- and then again at 320x180 on
 #                 Apple's software renderer, which is CI's. Each is measured
@@ -129,6 +134,27 @@ if [ -z "$hits" ]; then
 else
 	fail "a GLSL 4.10 reserved word appears in a shader:"
 	printf '%s\n' "$hits" | sed 's/^/      /'
+fi
+
+#---------------------------------------------------------------------------
+# The browser demo's copy of every shader, of the constants block constants()
+# writes, and of the Model.h and Controls numbers, is the plugin's, character
+# for character -- and each stage the page assembles is byte for byte the one
+# the plugin compiled, dumped above. A drifted comment counts. A shader change
+# here means `python3 demo/tools/sync_shaders.py`, never a hand edit of
+# demo/plugin.js. It says nothing about the page's PORT of the CPU half; only a
+# reader checks that.
+#---------------------------------------------------------------------------
+step "demo shaders"
+if [ -f demo/tools/check_shaders.py ]; then
+	if out=$(python3 demo/tools/check_shaders.py --dump "$dir" 2>&1); then
+		pass "$( printf '%s\n' "$out" | tail -1 )"
+	else
+		fail "the demo's shaders or constants have drifted from source/ -- run: python3 demo/tools/sync_shaders.py"
+		printf '%s\n' "$out" | tail -14
+	fi
+else
+	printf '   skipped: no demo/\n'
 fi
 rm -rf "$dir"
 
