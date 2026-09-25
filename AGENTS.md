@@ -623,3 +623,9 @@ the rasteriser table); its negative control is bit 256. verify.sh and CI run bot
 `KDye` set as a vec3) plus the telemetry line and the Temperature hint.
 `check_shaders.py --dump` holds the page's GLSL and constants to the plugin's.
 
+**Arena (win-lab, 7.27.1, Mesa llvmpipe): 9 of 9** with the v0.1.1 Windows zip from a
+`release.yml` dispatch on the branch, before the tag, expectation unchanged. 18 controls match;
+8 live; Temperature and Speed inconclusive (Temperature was weakly live on v0.1.0's run: the
+gate's thumbnail served the bare clip on five grabs, and its verdicts move run to run); Mode and
+Interval `inert`. No shader or error lines; Arena alive throughout.
+
