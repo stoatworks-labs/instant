@@ -41,9 +41,11 @@
 	any more. So temperature changes the picture and not only the speed. Cold,
 	the dye slows more than the timing layer does and development ends before
 	the slow yellow layer has arrived: a cyan cast, lower contrast, a lighter
-	print. Hot, the dyes all but finish: a warm cast. Polaroid's support pages
-	describe exactly those two casts (see ATTRIBUTIONS.md); the numbers below
-	that produce them are assumptions, stated as such.
+	print. Hot, the dyes all but finish: a warm cast. The manufacturer's support
+	page (see ATTRIBUTIONS.md) describes the cold print as light and low in
+	contrast, as here, but with a GREEN tint, not a cyan one, and the hot print
+	as yellow/red; the cold cast here is the model's, not the page's. The
+	numbers below that produce them are assumptions, stated as such.
 
 	**Presentation.** The print is seen by reflection off the reagent's white
 	pigment, through the dye image and the opacifier:

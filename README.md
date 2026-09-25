@@ -52,8 +52,9 @@ None of these is drawn. Each is one stage of the print doing what it does:
   Arrhenius law, with an activation energy fitted to a published development
   time/temperature chart. The timing layer that ends development speeds up less than
   the dyes do, so cold film stops before the yellow has arrived — cyan, pale, low
-  contrast — and hot film finishes — warm. Those are the casts the manufacturer
-  describes.
+  contrast — and hot film finishes — warm. The manufacturer's support page describes
+  the cold print as light and low in contrast, as here, but with a *green* tint where
+  this model gives a cyan one; the hot print's yellow/red it matches.
 - **The print develops bottom-first**, from the pod edge, at the front's speed; visible
   at a low `Speed`.
 - **A short spread leaves the top corners dark**, where no reagent reached; `Uneven`

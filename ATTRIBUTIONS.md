@@ -3,9 +3,8 @@
 Instant is built on other people's work. This file lists what that work is, who did
 it, and what it is doing here.
 
-It is a **provisional hand copy**, written 2026-09-25 in the shape the backend's
-`scripts/sync-attributions.py` generates, because Instant is not registered in the
-backend's master lists yet. When it is, the sync overwrites this file.
+It is generated — the master lists live in the `stoatworks-backend` repo and are
+pushed out by `scripts/sync-attributions.py`. Edit it there, not here.
 
 ## Code we derived from other people's work
 
@@ -17,7 +16,7 @@ Someone else solved this first, and this project would not exist in its current 
 Licence: MIT  
 Copyright: Stoatworks Labs
 
-The plugin's shape (the OBJECT core, the clock-unit voting, the About block, the Diag logger), the Take event and its edge trigger, the harness's session, PNG writer, parameter lookup, bench and `--pipe` mode with SIGPIPE ignored, the verify script and the negative-control pattern are wetplate's, which had them from rebate and toner; the characteristic curve's softplus form is rebate's; the host clock-unit voting is readout's by way of all of them.
+The plugin's shape (the OBJECT core, the clock-unit voting, the About block, the Diag logger), the Take event and its edge trigger, the harness's session, PNG writer, parameter lookup, bench and --pipe mode with SIGPIPE ignored, the verify script and the negative-control pattern are wetplate's, which had them from rebate and toner; the characteristic curve's softplus form is rebate's; the host clock-unit voting is readout's by way of all of them.
 
 ### PassBuffer — Stoatworks tinsel
 
@@ -45,7 +44,7 @@ Libraries, SDKs and frameworks the project is built on or bundles.
 Licence: BSD-3-Clause  
 Copyright: FreeFrame
 
-Vendored as a git submodule at external/ffgl, pinned to b1afaf9 like the fleet.
+Vendored as a git submodule at external/ffgl (third_party/ffgl in oxbow).
 
 The plugin ABI itself. An FFGL effect or source is defined by this SDK's headers — there is no other way to be loadable by Resolume Arena and Avenue.
 
@@ -73,17 +72,21 @@ Part of the upstream SDK tree rather than something these plugins call directly 
 
 No code was taken from these — but they were how we knew we had it right, and that is worth saying out loud.
 
-### The activation energy — ILFORD PHOTO, film development time/temperature compensation chart, 2002
+### The activation energy — ILFORD PHOTO, film development time/temperature compensation chart (April 2002)
 
-The source of `kDyeActivation` in source/Model.h, 67.41 kJ/mol. ILFORD PHOTO, "Film development time/temperature compensation chart" (April 2002), <https://www.ilfordphoto.com/wp/wp-content/uploads/2017/03/Temperature-compensation-chart.pdf>: development times at 18–27 °C for a given time at 20 °C, rounded to 15 s. Five of its rows (40 cells) are transcribed in tools/arrhenius_fit.py, which fits ln t against 1/T with a shared slope (standard error 620 J/mol) and which verify.sh re-runs. **The chart is for black-and-white silver development in a tank. Applying it to the dye layers of an integral print is an assumption**, stated here, in the script, in Model.h and in AGENTS.md: no published activation energy for dye-developer diffusion transfer was found. The timing layer's activation energy, half of it, has **no source**; it is an assumption.
+<https://www.ilfordphoto.com/wp/wp-content/uploads/2017/03/Temperature-compensation-chart.pdf>
 
-### What temperature does to an integral print — Polaroid support pages
+The source of the dye activation energy, 67.41 kJ/mol: five of the chart's rows (40 cells) are transcribed in tools/arrhenius_fit.py, which fits ln t against 1/T with a shared slope (standard error 620 J/mol) and which verify.sh re-runs. The chart is for black-and-white silver development in a tank; applying it to the dye layers of an integral print is an assumption. The timing layer's activation energy, half of it, has no source.
 
-The qualitative behaviour the temperature model was built to reproduce. Polaroid's support article "How does temperature affect Polaroid film?" (support.polaroid.com, article 115012361067) states a working range of 13–28 °C, that below it prints come out over-exposed, lacking colour contrast and with a cyan (blue) tint, and that above it colour prints develop with a yellow/red tint; Polaroid's product pages give the colour film's development time as about 10–15 minutes. The support page answered 403 to the session that wrote this, so these statements are as quoted by search-engine summaries of it, and should be re-read before a release. **No number in the plugin is taken from them.** The dye time constants (70, 120, 200 s at 24 °C), the opacifier's (45 s), the stop (600 s), the front's speed and the roller's circumference are all assumptions chosen to land inside that description, and Model.h says so beside each one.
+### What temperature does to an integral print — Polaroid support, "How does temperature affect Polaroid film?"
 
-### Roller marks and undeveloped patches — instant-film defect guides
+<https://support.polaroid.com/hc/en-us/articles/115012361067>
 
-That dirty rollers leave "a series of repeating marks down the length of an image", and that undeveloped patches come from paste that did not spread, most often at the edges and corners and more in old film, are from photographers' troubleshooting guides (Dan Finnen, "How to create the Polaroid 'look'", danfinnen.com; Polaroid's support article on undeveloped patches). The appearance of an unreached area varies with the chemistry; the plugin's dark blue-black is a choice.
+A working range of 13-28 C; below it prints emerge over-exposed, lacking colour contrast and with a green tint; above it colour prints develop with a yellow/red tint. Read on 2026-09-25 through the Internet Archive's copies of 2023-02 and 2026-04 (the live page answers 403 to scripts). No number in the plugin is taken from it. The plugin's cold print is pale and low in contrast as stated, but its cast is blue-cyan, not green: it comes from the yellow dye being slowest, and the page's green would need the magenta to lag instead. That disagreement is stated in the guide.
+
+### Roller marks and undeveloped patches — Instant-film troubleshooting guides (Dan Finnen, danfinnen.com; Polaroid support)
+
+That dirty rollers leave a series of repeating marks down the length of an image, and that undeveloped patches come from paste that did not spread, most often at the edges and corners and more in old film. The appearance of an unreached area varies with the chemistry; the plugin's dark blue-black is a choice.
 
 ## Inspirations
 
@@ -91,15 +94,15 @@ What this set out to be. No code, assets or binaries from any of these were used
 
 ### The integral instant print
 
-Built from what the process is rather than from anyone's implementation: an exposure through the front of the film, a reagent pod at the wide bottom border burst by the camera's rollers as the print is ejected and spread up the frame, dye developers released from the negative's red-, green- and blue-sensitive layers and immobilised where silver develops, so the print is a positive, reaching the image layer at their own rates under an opacifier that shields the negative until a timing layer drops the pH and ends development. Edwin Land's integral film (1972) is the process; the idea of doing a photochemical process as a process is rebate's.
+Built from what the process is rather than from anyone's implementation: an exposure through the front of the film, a reagent pod at the wide bottom border burst by the camera's rollers and spread up the frame, dye developers released from the negative's three layers and held back where silver develops, reaching the image layer at their own rates under an opacifier that shields the negative until a timing layer drops the pH and ends development. Edwin Land's integral film (1972) is the process; the idea of doing a photochemical process as a process is rebate's. No code, assets or binaries from any product were used or examined.
 
 ## Standards and published specifications
 
 What the implementation is measured against.
 
 - **CODATA 2018** — the molar gas constant, 8.314462618 J / (mol K).
-- **Melissa E. O'Neill, "PCG: A Family of Simple Fast Space-Efficient Statistically Good Algorithms for Random Number Generation" (Harvey Mudd College, 2014)** — The pcg_hash output mix used for the spread's lanes, the roller's dirt and the paper texture, written out rather than copied from anyone's source.
-- **IEC 61966-2-1** — The sRGB transfer function, both ways.
+- **PCG (M. E. O'Neill, Harvey Mudd College, 2014)** — the pcg_hash output mix used for the spread's lanes, the roller's dirt and the paper texture, written out rather than copied from anyone's source.
+- **IEC 61966-2-1:1999** — the sRGB transfer function, both ways.
 - **ITU-R BT.709** — the luminance weights the black-and-white stock and the meter use.
 
 ## Getting this wrong

@@ -119,11 +119,18 @@ Said plainly, because the brief asked for it and because most of them are choice
 | curve, Dmin/Dmax, latitude, opacifier colour, white, frame | Model.h | chosen by eye inside the published picture of instant film (short latitude, soft highlights); not measured. |
 | meter | mid grey 0.18, −2..+3 stops | the target is the photographic mid grey; the range is **assumed**. |
 
-The qualitative facts the temperature model was built to reproduce — below 13 °C
-prints come out light, lacking colour contrast, with a cyan tint; above 28 °C with a
-yellow/red tint — are from Polaroid's support pages, **as quoted by search results**:
-the page itself answered 403 to this session. Re-read it before a release. No number
-in the plugin is taken from it.
+The qualitative facts the temperature model was built against are Polaroid's support
+article "How does temperature affect Polaroid film?". The build session had it only
+as quoted by search results (the live page answers 403 to scripts), which said a
+*cyan* tint in the cold. **Re-read at release (2026-09-25) through the Internet
+Archive's copies of 2023-02 and 2026-04**, the page says: a working range of 13–28 °C;
+below it, photos "emerge over-exposed, lacking color contrast and with a green tint";
+above it, colour photos "develop with a yellow/red tint". So the model agrees on the
+light, low-contrast cold print and on the warm hot one, and **disagrees on the cold
+hue**: its cold cast is blue-cyan, because the yellow dye is the slowest and is the one
+cut short; a green tint would need the magenta to lag instead. That was not changed at
+release (it would reorder the development the whole plugin is built on); it is stated
+in the guide. No number in the plugin is taken from the page.
 
 ---
 

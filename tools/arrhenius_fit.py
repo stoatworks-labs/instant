@@ -42,8 +42,9 @@ The timing layer (which ends development and clears the opacifier by dropping
 the pH) is diffusion-controlled, and diffusion has a lower activation energy
 than a chemical step. The plugin takes HALF this figure for it. That is an
 assumption with no source; it is what makes cold film end development before
-the slow yellow layer arrives (the cyan cast and low contrast Polaroid's own
-support pages describe), and hot film finish it (the warm cast).
+the slow yellow layer arrives (low contrast and a cyan cast; the manufacturer's
+support page describes the low contrast but a GREEN tint), and hot film finish
+it (the warm cast).
 """
 import math
 import pathlib
