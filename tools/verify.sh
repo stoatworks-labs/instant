@@ -106,8 +106,11 @@ else
 			bad=$(( bad + 1 ))
 		fi
 	done
-	if [ "$n" -eq 0 ]; then
-		fail "no shaders were dumped"
+	# Every stage the plugin compiles: the vertex shader, capture, meter,
+	# develop, resample and print. A pass left out of --dump-shaders would pass
+	# glslc by never being handed to it (the meter was, once).
+	if [ "$n" -ne 6 ]; then
+		fail "$n shaders were dumped, not the plugin's 6"
 	elif [ "$bad" -eq 0 ]; then
 		pass "all $n shaders compile"
 	else
@@ -307,7 +310,7 @@ if [ "$(uname)" = "Darwin" ] && [ -d "$BUNDLE" ]; then
 	[ -x "$OXBOW" ] || OXBOW="$HOME/Projects/resolume/oxbow/build/oxbow"
 	if [ -x "$OXBOW" ]; then
 		probe=$("$OXBOW" probe "$BUNDLE" 2>&1)
-		for want in "name:        SW Instant" "id:          WT01" "type:        effect"; do
+		for want in "name:        SW Instant" "id:          IN01" "type:        effect"; do
 			case "$probe" in
 				*"$want"*) pass "host sees '$want'" ;;
 				*) fail "host does not see '$want' -- see: $OXBOW probe $BUNDLE" ;;

@@ -1601,7 +1601,8 @@ int dumpShaders( const std::string& dir )
 {
 	namespace shaders = instant::shaders;
 	const std::pair< const char*, std::string > files[] = {
-		{ "vertex.vert", shaders::Vertex() },     { "capture.frag", shaders::Capture() }, { "develop.frag", shaders::Develop() },
+		{ "vertex.vert", shaders::Vertex() },     { "capture.frag", shaders::Capture() }, { "meter.frag", shaders::Meter() },
+		{ "develop.frag", shaders::Develop() },
 		{ "resample.frag", shaders::Resample() }, { "print.frag", shaders::Print() },
 	};
 	for( const auto& f : files )
