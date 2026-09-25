@@ -369,6 +369,14 @@ Driving trap: the kit redraws a paused page on every parameter change, so a set 
 `fresh()` renders a stray frame at the old clock and takes a print there; set everything,
 let that frame render, then `fresh()`.
 
+**Measured again for v0.1.1 (2026-09-25)**, the same driver extended: at the defaults (120
+frames); at 6 °C and at 36 °C, 256×, 400 frames each (past the stop at 6 °C); Vintage cold
+uneven as before; Take mode, Black & White, 6 °C. ANGLE on Metal: at most 1/255, 47 of 92.2
+million values at 6 °C; SwiftShader: at most 1/255 on every case. The negative: the page at
+6 °C against **v0.1.0's** `intest` (the shared activation energy) differs by up to 64/255 on
+12.1 million values (the centre (177, 161, 185) against (162, 123, 185)), so the comparison
+sees a port that kept one rate.
+
 Deploy: `cf-run npx wrangler deploy` from the repo root, or push to main
 (`.github/workflows/deploy.yml`). The host is a Worker **route** over a proxied
 `AAAA 100::` record made through the API on 2026-09-25, not a custom domain: the zone
