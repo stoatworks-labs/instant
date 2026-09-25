@@ -10,9 +10,10 @@ tell anybody this works.
 
 Instant film developing in front of you, as an FFGL 2.1 effect (`IN01`, shown as
 `SW Instant`) for Resolume Arena and Avenue. C++17 + GLSL 4.10, CMake, universal
-macOS `.bundle` and (by CI, untested) a Windows `.dll`. MIT; intended home
-`github.com/stoatworks-labs/instant`, which does not exist yet. A local v0.1.0: no
-remote, no tag, no release, no website, never loaded into Resolume.
+macOS `.bundle` and a Windows `.dll`. MIT, public at
+[github.com/stoatworks-labs/instant](https://github.com/stoatworks-labs/instant), released
+at v0.1.0 on 2026-09-25 with a user guide, a site page, a browser demo and a video (see
+"The release, v0.1.0" at the end). Never loaded into Resolume on macOS.
 
 Built 2026-09-25 in one session (tranche five, Allan's pick) from the fleet's
 templates and `specs/SPEC-instant.md`: wetplate for the plugin shape, the Take event,
@@ -301,7 +302,10 @@ consequences.
   second and development ends 9.4 s after the take; with the default Interval of 16 s a
   finished print holds for six seconds before the next. Speed runs 1–256×, geometric.
 - **Everything scales with Speed**, the front included: at 64× the spread is one frame.
-  The front is visible below about 8×.
+  **The front is not visible at any Speed** (found filming the release video): it
+  crosses the frame in one film-second and the opacifier clears over a minute, so on a
+  flat grey at 1× the bottom leads the top by a level or two at most, less than the
+  shine's own gradient. `--front` measures it; the video and guide do not claim it.
 - **Default Mode is Continuous**, so dropping the effect on a clip does something. In
   Take mode the plugin is a viewfinder (the clip, untouched) until the first press —
   switching modes keeps the print that exists. A press in Continuous takes at once and
@@ -327,9 +331,10 @@ consequences.
   says what the process is.
 - **Test hooks live in the shipped plugin** (the `Perturb` bits, `Probe` in the print
   pass), always zero.
-- **Provisional About block**: `StoatworksAbout.h` and `ATTRIBUTIONS.md` are hand copies
-  in the generated shape, `guide = ""`, so the About block has no User guide button.
-- **No OpenFX port, no browser demo, no presets, no user guide** for 0.1.0.
+- **The About block and ATTRIBUTIONS.md are generated** by the backend's sync-about and
+  sync-attributions since registration (they were provisional hand copies before it).
+- **No OpenFX port and no presets** for 0.1.0. (The user guide and the browser demo came
+  with the release.)
 
 ---
 
@@ -382,11 +387,12 @@ and 1280×720, and again at 320×180 on Apple's software renderer.
 
 ### Assumed, or not done
 
-- ☠️ **Never loaded into Resolume**, on either platform. Everything was compiled,
+- ☠️ **Never loaded into Resolume on macOS** (on Windows, see "The release, v0.1.0"). Everything was compiled,
   rendered and measured offline against the real plugin class in a headless CGL
   context, plus an `oxbow` load. How Resolume's clock behaves across a long session,
   what a paused composition does to a print, and how the controls present are untested.
-- **Windows never built.** The CI workflow exists and has never run.
+- **Windows** builds in CI (first run green 2026-09-25) and passed the fleet's Arena gate on
+  software rendering; never run on a GPU.
 - **Seen on Resolume's bundled demo clips** (Trinity, Enter5, IntoTheGlow, the tank, Beat
   001) through `--pipe`, never on camera footage — skin, skies, a real scene metered by
   a real camera's rules.
@@ -406,7 +412,7 @@ and 1280×720, and again at 320×180 on Apple's software renderer.
   the take a frame at a time.
 - **Should controls other than Temperature freeze at the take?** Physically they would.
 - **Is 64× the right default?** It suits a VJ set; a slow ambient piece wants 8–16×,
-  where the spread is visible.
+  (the spread's front is not visible even there; see Decisions).
 - **A beat-synced Interval** (bars, from Resolume's transport) would suit live use better
   than seconds.
 - **Should the unreached negative be dark?** The guides say it depends on the chemistry.
@@ -423,3 +429,35 @@ and 1280×720, and again at 320×180 on Apple's software renderer.
 - **photofinish** — the resize-mid-run trap.
 - **tinsel** — `PassBuffer`, `sweep.py`, and the fleet's trap list.
 - **oxbow** — `oxbow probe` and `oxbow selftest` are what load this bundle as a host.
+
+---
+
+## The release, v0.1.0 (2026-09-25)
+
+Moved from `~/dev/instant` to `~/Projects/resolume/instant`, public at
+`stoatworks-labs/instant`, registered in the website's projects.json, the backend's
+sync-about TARGETS and the attribution tables; the About block and ATTRIBUTIONS.md are
+generated since. verify.sh green on the About build; CI green on GitHub (macOS physics on
+the runner's software renderer, and the first Windows MSVC build, which compiled first time).
+
+- **Arena (win-lab, 7.27.1, Mesa llvmpipe, no GPU): 9 of 9** in the fleet gate
+  (`plugin-bench/arena/expect/instant.json`, 9f98ff8). 18 host controls match. Live: Opacity,
+  Film, Temperature (weak, 1.49 on the ratio test), Expired, Exposure, Spread, Dirty Roller
+  (weak, 1.31), Border, Mix. Speed inconclusive: it acts only while a print develops, and the
+  gate's print is done 9.4 s after its take. Mode and Interval are marked `inert`: they act
+  only at the next take, and the next print of a still is the same print.
+- **Filming found the reagent front invisible** at any Speed (see Decisions). The video's
+  1× beat is seven seconds of real time under the opacifier, then a ramp to 64× on the same
+  print; no beat claims the front.
+- **Measured casts** (mid grey through `--pipe` at 256×, after the stop, 8-bit sRGB):
+  6 °C (119, 128, 139), 14 °C (117, 120, 125), 24 °C (117, 117, 116), 34 °C (117, 116, 112).
+  The cold cast is clear; the hot one slight.
+- **The temperature source, re-read**: the Polaroid support article (115012361067) through the
+  Internet Archive (2023-02-01 and 2026-04-06 copies; the live page answers 403 to scripts)
+  says below 13 °C prints come out "over-exposed, lacking color contrast and with a green
+  tint", above 28 °C colour prints "a yellow/red tint". The model's cold cast is cyan. Left as
+  it is and stated in the guide, README, ATTRIBUTIONS and derived.json. A green cold tint
+  would need magenta to be the layer cut short.
+- **IntoTheGlow_02 flashes every half second**, so a take on it prints whichever phase it
+  caught; the first video beat moved to Metalive's steady gold.
+

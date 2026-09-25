@@ -55,8 +55,9 @@ None of these is drawn. Each is one stage of the print doing what it does:
   contrast — and hot film finishes — warm. The manufacturer's support page describes
   the cold print as light and low in contrast, as here, but with a *green* tint where
   this model gives a cyan one; the hot print's yellow/red it matches.
-- **The print develops bottom-first**, from the pod edge, at the front's speed; visible
-  at a low `Speed`.
+- **The print develops bottom-first**, from the pod edge, at the front's speed. The
+  harness measures it row by row; the eye cannot see it at any `Speed`, because the front
+  crosses the frame in one film-second and the picture takes a minute to come through.
 - **A short spread leaves the top corners dark**, where no reagent reached; `Uneven`
   runs in lanes; `Expired` paste reaches less far, and the dyes fade toward pink.
 - **A dirty roller repeats its mark** at exactly its circumference.
@@ -92,7 +93,9 @@ below; set Border to 0 for the process full-frame.
 
 ## Status
 
-**v0.1.0, local, and honestly early — 25 September 2026.**
+**v0.1.0, released 25 September 2026, and honestly early.** There is a
+[user guide](https://stoatworks-labs.com/software/instant/guide/)
+([PDF](docs/USER-GUIDE.pdf)) and a [project page](https://stoatworks-labs.com/software/instant/).
 
 ### Measured offline, on macOS
 
@@ -123,15 +126,38 @@ Render cost at the defaults, best of three runs of 60 frames after a warm-up,
 development buffers, 24 bytes a texel: **21 MB** at 720p, **47 MB** at 1080p,
 **190 MB** at 4K. macOS figures only.
 
-### Not established
+### In Resolume Arena, on Windows
 
-It has **never been loaded into Resolume**, on either platform, and the Windows build
-has never been compiled; its CI workflow exists and has never run. Everything above was
-compiled, rendered and measured offline against the real plugin class in a headless CGL
-context, plus an `oxbow` load. The look has been seen on Resolume's bundled demo clips
-through `intest --pipe`, never on camera footage. The casts Temperature, Expired and
-Vintage produce are judged by eye; the checks measure the rates behind them, not the
-casts. No user guide, no OpenFX port, no browser demo, no presets.
+On Windows it has: a build of this source loads, registers and renders in Resolume Arena 7.27.1 on software rendering (win-lab, Mesa llvmpipe, no GPU), with all 18 host controls matching what the plugin declares, in the fleet's Arena gate (9 of 9 checks). The gate's picture is a still: nine controls read as moving the picture (Temperature and Dirty Roller weakly), Speed inconclusive (it acts only while a print develops, and the gate's print is finished 9.4 s after its take), and Mode and Interval were not measured, because they act only at the next take and the next print of a still is the same print. Software rendering says nothing about a GPU or about speed.
+
+### What filming the release video found
+
+The video is rendered through `intest --pipe` over Resolume's demo clips, every beat in real
+time at the Speed its caption states. It found that **the reagent front cannot be seen** at any
+Speed (it crosses the frame in one film-second, and the picture takes a minute to come through
+the opacifier: at 1× the bottom of a flat grey leads the top by a level or two, less than the
+shine), so the video shows seven seconds of real time instead and makes no claim for the front.
+It also measured the casts on a mid grey after the stop: 6 °C prints (119, 128, 139), clearly
+blue-cyan; 34 °C prints (117, 116, 112), only slightly warm.
+
+### The temperature source, re-read at release
+
+The build session had the manufacturer's support page on temperature only through search
+summaries, which said a *cyan* tint in the cold. Read at release through the Internet
+Archive's copies (2023-02 and 2026-04), it says prints below 13 °C come out over-exposed,
+lacking colour contrast and **with a green tint**, and above 28 °C colour prints take a
+yellow/red tint. The model's cold print is light and flat as stated, but blue-cyan, not
+green. It was not changed; the guide says so. No number in the plugin comes from that page.
+
+### Not done
+
+- **Never loaded into Resolume on macOS.** Everything above was compiled, rendered and
+  measured offline against the real plugin class in a headless CGL context, plus an `oxbow`
+  load.
+- Seen only on Resolume's bundled demo clips through `intest --pipe`, never on camera footage.
+- The casts Temperature, Expired and Vintage produce are judged by eye; the checks measure
+  the rates behind them, not the casts.
+- No OpenFX port and no presets.
 
 ## Build
 
