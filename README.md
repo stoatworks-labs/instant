@@ -32,14 +32,14 @@ eleven seconds after the take, at 64x.</sub>
 
 ## Download
 
-**[v0.1.0](https://github.com/stoatworks-labs/instant/releases/tag/v0.1.0)** — prebuilt for macOS and Windows. Pick your platform:
+**[v0.1.1](https://github.com/stoatworks-labs/instant/releases/tag/v0.1.1)** — prebuilt for macOS and Windows. Pick your platform:
 
 <details>
 <summary><b>macOS</b> — Universal (Apple Silicon + Intel)</summary>
 
 | Build | Download | Size |
 | --- | --- | --- |
-| Universal (Apple Silicon + Intel) · .dmg disk image | [`instant-0.1.0-macos-universal.dmg`](https://github.com/stoatworks-labs/instant/releases/download/v0.1.0/instant-0.1.0-macos-universal.dmg) | 217 KB |
+| Universal (Apple Silicon + Intel) · .dmg disk image | [`instant-0.1.1-macos-universal.dmg`](https://github.com/stoatworks-labs/instant/releases/download/v0.1.1/instant-0.1.1-macos-universal.dmg) | 219 KB |
 | Universal (Apple Silicon + Intel) · .zip archive | [`instant-macos-universal.zip`](https://github.com/stoatworks-labs/instant/releases/latest/download/instant-macos-universal.zip) | 178 KB |
 
 </details>
@@ -49,7 +49,7 @@ eleven seconds after the take, at 64x.</sub>
 
 | Build | Download | Size |
 | --- | --- | --- |
-| x64 · .exe installer | [`instant-0.1.0-windows-x86_64-setup.exe`](https://github.com/stoatworks-labs/instant/releases/download/v0.1.0/instant-0.1.0-windows-x86_64-setup.exe) | 223 KB |
+| x64 · .exe installer | [`instant-0.1.1-windows-x86_64-setup.exe`](https://github.com/stoatworks-labs/instant/releases/download/v0.1.1/instant-0.1.1-windows-x86_64-setup.exe) | 224 KB |
 | x64 · .zip archive | [`instant-windows-x86_64.zip`](https://github.com/stoatworks-labs/instant/releases/latest/download/instant-windows-x86_64.zip) | 114 KB |
 
 </details>
