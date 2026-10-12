@@ -311,8 +311,8 @@ and after.
 ## The browser demo
 
 `demo/` is the page at **instant-demo.stoatworks-labs.com** (2026-09-25), on the fleet's
-kit (`stoatworks-backend/resolume-demo`, vendored by its `sync.sh`; `instant` is not yet
-in that script's repo list, so `sync.sh --check` does not see it).
+kit (`stoatworks-backend/resolume-demo`, vendored by its `sync.sh`; `instant` is in
+that script's repo list, so `sync.sh --check` sees it).
 
 **What is the plugin's.** Every GLSL string of `Shaders.cpp` — the version line, the
 vertex body, `kModel` and the capture, meter, develop, resample and print bodies — is
