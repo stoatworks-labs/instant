@@ -1,32 +1,25 @@
 # instant
 
 > **AI-assisted project.** This codebase was created with [Claude](https://claude.com/claude-code)
-> (Anthropic), directed and reviewed by a human author. The print is not asserted but
-> measured: an offline harness drives the real plugin class in a headless GL context
-> on a synthetic clock and reads each claim back out of the picture — each dye layer's
-> density on a flat patch follows its first-order law with the stated time constant,
-> fitted without knowing the asymptote; at the stated early time the cyan layer leads
-> and the print then moves only toward neutral, reaching it at the stop; the time
-> constants at 14 and 34 °C stand in the ratio the Arrhenius law gives, for each dye
-> layer at its own activation energy and for the timing layer; a neutral grey comes out
-> green when cold, neutral at 24 °C and warm when hot; each row of the print starts developing at its
-> distance from the pod edge over the front's speed; the dirty roller's mark repeats
-> at exactly its circumference, whole-pixel and fractional; after a Take the print
-> develops from the captured frame however the clip changes, and a resize keeps it;
-> and the camera's meter prints two levels alike — with nine negative controls that
-> prove each check can fail. It has **never been loaded into Resolume**; it is loaded
-> by [oxbow](https://github.com/stoatworks-labs/oxbow), which is a real FFGL host and
-> is not Resolume. See [Status](#status).
+> (Anthropic), directed and reviewed by a human author. It's **never been loaded into
+> Resolume on macOS**. On the Mac it's been loaded by
+> [oxbow](https://github.com/stoatworks-labs/oxbow), which is a real FFGL host but isn't
+> Resolume, and on Windows it loads and renders in Resolume Arena on software rendering.
+> Everything else is measured by an offline harness that drives the real plugin class in a
+> headless GL context on a synthetic clock and reads each claim back out of the picture,
+> with nine negative controls to prove each check can fail. The details are under
+> [Status](#status).
 
-Instant film developing in front of you — an integral print, exposed by a Take and
-coming up over minutes — as an FFGL effect for [Resolume](https://resolume.com) Arena
-and Avenue.
+Instant film developing in front of you, as an FFGL effect for
+[Resolume](https://resolume.com) Arena and Avenue. A Take exposes an integral print from
+the clip, and it comes up over minutes the way the real thing does. Shaking the laptop
+won't help, but then it never helped the real ones either.
 
 ![Resolume's demo clip IntoTheGlow as three moments of one print: a dark green-grey frame with the picture just showing through, the same print pale and blue a second later, and the finished print warm and dense](docs/hero.png)
 
-<sub>One print, rendered by `intest --pipe`, the offline harness — not captured from
-Resolume. Resolume's bundled demo clip at the defaults, half a second, two seconds and
-eleven seconds after the take, at 64x.</sub>
+<sub>One print, rendered by `intest --pipe`, the offline harness, rather than captured
+from Resolume: Resolume's bundled demo clip at the defaults, half a second, two seconds
+and eleven seconds after the take, at 64x.</sub>
 
 <!-- downloads:start -->
 
@@ -64,41 +57,44 @@ macOS builds are signed and notarised and open normally. The Windows builds are 
 
 [![Instant: instant film developing in front of you, for Resolume](docs/video-thumb.png)](https://www.youtube.com/watch?v=nUx-UvWsWgQ)
 
-Every beat runs in real time at the Speed its caption states: 64x (the default), 1x (real
-time, for seven seconds), 128x and 256x. A real print takes about ten minutes.
+Every beat runs in real time at the Speed its caption gives: 64x (the default), 1x (real
+time, for seven seconds), 128x and 256x. A real print takes about ten minutes, which is why
+most of the video is sped up.
 
 ## The one idea
 
-An integral instant print — the kind a Polaroid SX-70 or 600 camera ejects — is
+An integral instant print (the kind a Polaroid SX-70 or 600 camera spits out) is
 exposed through its front, and then it develops in the open, in the order the
 chemistry sets. The camera's rollers burst a reagent pod in the print's thick bottom
 border and spread it up the frame. Dye developers migrate from the negative's three
 layers to the image layer, each at its own rate, under a dark opacifier that shields
-the negative until a timing layer drops the pH — which also ends development.
+the negative until a timing layer drops the pH, which also ends development.
 
-So the picture comes up from a dark green-grey, pale and blue-cyan at first, and warms
-to full colour as the slower magenta and yellow dyes arrive. This plugin runs that
-process on the clip's frame, stage by stage, on the host's clock.
+So the picture comes up out of a dark green-grey, pale and blue-cyan at first, and
+warms to full colour as the slower magenta and yellow dyes turn up. The plugin runs
+that process on the clip's frame, stage by stage, on the host's clock.
 
 ## What falls out
 
-None of these is drawn. Each is one stage of the print doing what it does:
+None of this is painted on. Each one is a stage of the print doing what it does:
 
 - **The picture arrives blue-cyan and warms.** Each dye layer approaches its final
   density first-order, cyan with a time constant of 70 s, magenta 120 s, yellow
-  200 s. Four minutes in, a neutral grey reads density R 0.67, G 0.60, B 0.51.
+  200 s (the harness fits each one back out of a flat patch without knowing the
+  asymptote). Four minutes in, a neutral grey reads density R 0.67, G 0.60, B 0.51.
 - **The dark green-grey start** is the opacifier, clearing with its own time constant.
 - **Temperature changes the picture, not only the speed.** Every rate follows the
   Arrhenius law, and each dye layer has its own activation energy. The timing layer
-  that ends development speeds up less than the dyes do, so cold film stops short —
-  pale, low in contrast, and **green**, because magenta slows the most and is cut
-  shortest — and hot film finishes, with the slow yellow over-reaching: warm, yellow-red.
-  That is what the manufacturer's support page says of cold and hot prints.
+  that ends development speeds up less than the dyes do, so cold film stops short
+  (pale, low in contrast and **green**, because magenta slows the most and gets cut
+  shortest) and hot film finishes, with the slow yellow overshooting: warm, yellow-red.
+  That's what the manufacturer's support page says about cold and hot prints.
 - **The print develops bottom-first**, from the pod edge, at the front's speed. The
-  harness measures it row by row; the eye cannot see it at any `Speed`, because the front
-  crosses the frame in one film-second and the picture takes a minute to come through.
-- **A short spread leaves the top corners dark**, where no reagent reached; `Uneven`
-  runs in lanes; `Expired` paste reaches less far, and the dyes fade toward pink.
+  harness measures it row by row, but your eye can't see it at any `Speed`, because the
+  front crosses the frame in one film-second and the picture takes a minute to come through.
+- **A short spread leaves the top corners dark**, where no reagent got to. `Uneven`
+  runs in lanes, and with `Expired` the paste doesn't reach as far and the dyes fade
+  towards pink.
 - **A dirty roller repeats its mark** at exactly its circumference.
 - **The camera meters.** An averaging meter brings the frame's mean to mid grey at the
   take, within a camera's range; `Exposure` is the lighten/darken wheel on top.
@@ -107,15 +103,15 @@ None of these is drawn. Each is one stage of the print doing what it does:
 
 Most of the chemistry's numbers are assumptions, and the plugin says so beside each
 one. The yellow layer's activation energy is fitted from ILFORD's chart for
-black-and-white silver development, and applying it to dye development is itself an
-assumption. **The cyan and magenta layers' (103.6 and 106.85 kJ/mol) are fitted to the
-manufacturer's description of a cold print** — a green tint — not to any measurement:
-no published per-layer figure was found. The timing layer's is taken as half the
-chart's, with no source. The dye time constants, the stop and
-the opacifier are chosen to land inside the manufacturer's stated 10–15 minutes and
-the order the process is known for. None of them was measured from a real print. Each
-dye absorbs only its own channel, and the spread is a straight front with a stated
-reach, not a fluid.
+black-and-white silver development, and using it for dye development is an assumption
+in itself. **The cyan and magenta layers' (103.6 and 106.85 kJ/mol) are fitted to the
+manufacturer's description of a cold print** (a green tint), not to any measurement,
+since no published per-layer figure turned up. The timing layer's is taken as half the
+chart's, with no source at all. The dye time constants, the stop and the opacifier are
+chosen to land inside the manufacturer's stated 10–15 minutes and in the order the
+process is known for. None of them was measured from a real print. Each dye only
+absorbs its own channel, and the spread is a straight front with a stated reach rather
+than a fluid.
 
 ## Controls
 
@@ -126,24 +122,24 @@ reach, not a fluid.
 | **Chemistry** | Spread (Full, Short, Uneven), Dirty Roller, Speed (1–256×). |
 | **Print** | Border (full frame to the print in its frame), Mix. |
 
-The defaults are colour film at 24 °C, fresh, a full spread and a clean roller, the
-print in its frame, a new print every 16 s, at **64×**. That brings a picture up in
-about a second and ends development 9.4 s after the take. **1× is honest**: a real
-print, ten minutes to the stop. In Take mode the plugin shows the clip until you press
-Take. Outside the print the output is transparent, so a print floats over the layer
-below; set Border to 0 for the process full-frame.
+The defaults are colour film at 24 °C, fresh, with a full spread and a clean roller,
+the print in its frame and a new print every 16 s, at **64×**. That brings a picture up
+in about a second and ends development 9.4 s after the take. **1× is real time**: a
+real print, ten minutes to the stop, so bring a flask. In Take mode the plugin shows the
+clip until you press Take. Outside the print the output is transparent, so a print
+floats over the layer below; set Border to 0 for the process full-frame.
 
 ## Status
 
-**v0.1.1, released 25 September 2026, and honestly early.** v0.1.1 turns the cold
+**v0.1.1, released 25 September 2026, and still early days.** v0.1.1 turns the cold
 print's cast from cyan to green, as the manufacturer describes it, by giving each dye
-layer its own activation energy; v0.1.0 came out the same day. There is a
+layer its own activation energy. v0.1.0 came out the same day. There's a
 [user guide](https://stoatworks-labs.com/software/instant/guide/)
 ([PDF](docs/USER-GUIDE.pdf)) and a [project page](https://stoatworks-labs.com/software/instant/).
 
 ### Measured offline, on macOS
 
-`tools/verify.sh` passes on this machine (M4 Max, macOS 26.4.1) against a fresh
+`tools/verify.sh` passes on this Mac (M4 Max, macOS 26.4.1) against a fresh
 universal Release build. It runs every check at **two rasters**, 320×180 and 1280×720,
 and again at 320×180 on Apple's software renderer. In numbers:
 
@@ -174,28 +170,36 @@ a quieter GPU). State held across frames: the capture and two development buffer
 
 ### In Resolume Arena, on Windows
 
-On Windows it has: the v0.1.1 build loads, registers and renders in Resolume Arena 7.27.1 on software rendering (win-lab, Mesa llvmpipe, no GPU), with all 18 host controls matching what the plugin declares, in the fleet's Arena gate (9 of 9 checks, 2026-09-25). The gate's picture is a still: eight controls read as moving the picture, Temperature and Speed inconclusive (Speed acts only while a print develops, and the gate's print is finished 9.4 s after its take; Temperature read weakly live on v0.1.0's run, and the gate's thumbnail served the bare clip on five grabs this time), and Mode and Interval were not measured, because they act only at the next take and the next print of a still is the same print. Software rendering says nothing about a GPU or about speed.
+On Windows, the v0.1.1 build loads, registers and renders in Resolume Arena 7.27.1 on
+software rendering (win-lab, Mesa llvmpipe, no GPU), with all 18 host controls matching
+what the plugin declares, in the fleet's Arena gate (9 of 9 checks, 2026-09-25). The
+gate's picture is a still: eight controls read as moving the picture, Temperature and
+Speed were inconclusive (Speed only acts while a print develops, and the gate's print is
+finished 9.4 s after its take; Temperature read weakly live on v0.1.0's run, and the
+gate's thumbnail served the bare clip on five grabs this time), and Mode and Interval
+weren't measured, because they only act at the next take and the next print of a still
+is the same print. Software rendering says nothing about a GPU or about speed.
 
 ### What filming the release video found
 
 The video is rendered through `intest --pipe` over Resolume's demo clips, every beat in real
-time at the Speed its caption states. It found that **the reagent front cannot be seen** at any
+time at the Speed its caption gives. It found that **the reagent front can't be seen** at any
 Speed (it crosses the frame in one film-second, and the picture takes a minute to come through
 the opacifier: at 1× the bottom of a flat grey leads the top by a level or two, less than the
-shine), so the video shows seven seconds of real time instead and makes no claim for the front.
-It also measured the casts on a mid grey after the stop: 6 °C printed (119, 128, 139), clearly
-blue-cyan; 34 °C (117, 116, 112), only slightly warm. That cold cyan is what v0.1.1 changed; the
-video was not re-filmed: its 6 °C beat (at 0:29) still shows v0.1.0's cyan, and its caption
-says so.
+shine), so the video shows seven seconds of real time instead and makes no claim about the
+front. It also measured the casts on a mid grey after the stop: 6 °C printed (119, 128, 139),
+clearly blue-cyan, and 34 °C (117, 116, 112), only slightly warm. That cold cyan is what v0.1.1
+changed. I haven't re-filmed the video, so its 6 °C beat (at 0:29) still shows v0.1.0's cyan,
+and its caption says so.
 
 ### The cold print is green, since v0.1.1
 
 The manufacturer's support page on temperature (read through the Internet Archive's copies of
 2023-02 and 2026-04) says prints below 13 °C come out over-exposed, lacking colour contrast and
 **with a green tint**, and above 28 °C colour prints take a yellow/red tint. v0.1.0 printed the
-cold grey blue-cyan: the build session had the page only through search summaries that said
-cyan. v0.1.1 gives each dye layer its own activation energy, so the cold slows magenta most, and
-the cold grey is green. Through the plugin, a flat mid grey at the defaults, printed at 256x,
+cold grey blue-cyan, because the build session only had the page through search summaries, and
+they said cyan. v0.1.1 gives each dye layer its own activation energy, so the cold slows magenta
+most, and the cold grey comes out green. Through the plugin, a flat mid grey at the defaults, printed at 256x,
 after the stop, 8-bit:
 
 | | v0.1.0 | v0.1.1 |
@@ -206,7 +210,7 @@ after the stop, 8-bit:
 | 24 °C | 120, 120, 119 | 120, 120, 119 |
 | 34 °C | 120, 120, 116 | 120, 120, 116 |
 
-The page gives no numbers and no published per-layer figure was found, so the cyan and magenta
+The page gives no numbers and no published per-layer figure turned up, so the cyan and magenta
 activation energies are **fitted to its words** (`tools/cast_fit.py`): at 6 °C red equals blue,
 and the cast is as strong as v0.1.0's was. At 24 °C nothing changed.
 
@@ -215,7 +219,8 @@ and the cast is as strong as v0.1.0's was. At 24 °C nothing changed.
 - **Never loaded into Resolume on macOS.** Everything above was compiled, rendered and
   measured offline against the real plugin class in a headless CGL context, plus an `oxbow`
   load.
-- Seen only on Resolume's bundled demo clips through `intest --pipe`, never on camera footage.
+- I've only seen it on Resolume's bundled demo clips through `intest --pipe`, never on camera
+  footage.
 - `--cast` checks the hue of Temperature's casts on a neutral grey; how strong they are, and
   the casts Expired and Vintage produce, are judged by eye.
 - No OpenFX port and no presets.
@@ -228,11 +233,11 @@ from `source/Shaders.cpp` by `demo/tools/sync_shaders.py` with the constants blo
 plugin writes from `Model.h`, and checked by `demo/tools/check_shaders.py` from
 `tools/verify.sh` against what `intest --dump-shaders` says the plugin compiles. So the
 camera's meter, the dye and stop doses and the print run on the GPU over the same float
-buffers. Its CPU half — the clock and the film age, the take, the Arrhenius factors, the
-print's layout and every control's law — is a hand port to JavaScript that only a reader
+buffers. Its CPU half (the clock and the film age, the take, the Arrhenius factors, the
+print's layout and every control's law) is a hand port to JavaScript that only a reader
 checks, and the page says so. Driven frame by frame against `intest --pipe --fps 60` on
-the same input it agrees to 1/255 on every pixel. Take is a button under the picture.
-Generated clips only, or your own image or video, which never leaves the page.
+the same input, it agrees to 1/255 on every pixel. Take is a button under the picture.
+It only has generated clips, or your own image or video, which never leaves the page.
 
 ## Build
 

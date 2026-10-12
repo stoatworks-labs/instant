@@ -1,11 +1,12 @@
 # Instant user guide
 
 Instant is **instant film developing in front of you, for [Resolume](https://resolume.com)
-Arena and Avenue**, as an FFGL effect. It does not fade a grade in. It runs the process of an
-integral instant print on the clip: a Take exposes the frame, and then the print develops in the
-open, stage by stage, in the order the chemistry sets. The dark green-grey start, the pale
-blue-cyan picture that warms as it arrives, the green of cold film and the warmth of hot film, the
-dark corners of a short spread and the repeating mark of a dirty roller are what that process does.
+Arena and Avenue**, as an FFGL effect. A Take exposes the clip's frame as an integral instant
+print, and the print then develops in the open, stage by stage, in the order the chemistry sets.
+
+None of it is a grade fading in. The dark green-grey start, the pale blue-cyan picture that warms
+as it arrives, the green of cold film and the warmth of hot film, the dark corners of a short
+spread and the repeating mark of a dirty roller are all just that process doing what it does.
 
 ![Resolume's demo clip IntoTheGlow as three moments of one print: a dark green-grey frame with the picture just showing through, the same print pale and blue a second later, and the finished print warm and dense](hero.png)
 
@@ -13,24 +14,32 @@ dark corners of a short spread and the repeating mark of a dirty roller are what
 offline harness rather than captured from Resolume: half a second, two seconds and eleven seconds
 after the take, at 64x.*
 
-> **Before you rely on this:** released at **v0.1.1**, and honestly early. The process is
+> **Before you rely on this:** it's released at **v0.1.1**, and it's still early days. The process is
 > measured rather than asserted, by a harness that drives the real plugin class and reads each
 > claim back out of what it renders, at two rasters and on a software renderer: each dye layer's
 > density follows its first-order law with the stated time constant (70, 120 and 200 s for cyan,
 > magenta and yellow, recovered to 1e-5); four minutes in, a neutral grey reads R 0.68 > G 0.61 >
-> B 0.52, a blue-cyan print, and then moves only toward neutral, reaching it at the stop; the time
+> B 0.52, a blue-cyan print, and then moves only towards neutral, reaching it at the stop; the time
 > constants at 14 and 34 °C stand in the Arrhenius ratio for each layer at its own activation
 > energy and for the timing layer; a neutral grey comes out green when cold, neutral at 24 °C and
 > warm when hot;
 > each row starts developing at its distance from the pod over the front's speed; the dirty
 > roller's mark repeats at exactly its circumference; the print develops from the captured frame
 > however the clip changes, and survives a resize; and the camera's meter prints two exposures
-> alike. Nine deliberately broken models are each shown to fail their check, and all 12 controls
+> alike. Nine models broken on purpose are each shown to fail their check, and all 12 controls
 > are shown to change the picture. **The checks verify the stated model, not a real print**: most
 > of the chemistry's numbers are assumptions, listed under Where the numbers come from. It has
-> **never been loaded into Resolume on macOS**; there the one host it has run in is the fleet's
+> **never been loaded into Resolume on macOS**; there the one host it's run in is the fleet's
 > own test host, `oxbow`, for 120 frames.
-> On Windows it has: the v0.1.1 build loads, registers and renders in Resolume Arena 7.27.1 on software rendering (win-lab, Mesa llvmpipe, no GPU), with all 18 host controls matching what the plugin declares, in the fleet's Arena gate (9 of 9 checks, 2026-09-25). The gate's picture is a still: eight controls read as moving the picture, Temperature and Speed inconclusive (Speed acts only while a print develops, and the gate's print is finished 9.4 s after its take; Temperature read weakly live on v0.1.0's run, and the gate's thumbnail served the bare clip on five grabs this time), and Mode and Interval were not measured, because they act only at the next take and the next print of a still is the same print. Software rendering says nothing about a GPU or about speed.
+> On Windows, the v0.1.1 build loads, registers and renders in Resolume Arena 7.27.1 on software
+> rendering (win-lab, Mesa llvmpipe, no GPU), with all 18 host controls matching what the plugin
+> declares, in the fleet's Arena gate (9 of 9 checks, 2026-09-25). The gate's picture is a still:
+> eight controls read as moving the picture, Temperature and Speed were inconclusive (Speed only
+> acts while a print develops, and the gate's print is finished 9.4 s after its take; Temperature
+> read weakly live on v0.1.0's run, and the gate's thumbnail served the bare clip on five grabs
+> this time), and Mode and Interval weren't measured, because they only act at the next take and
+> the next print of a still is the same print. Software rendering says nothing about a GPU or
+> about speed.
 > Try it on a spare layer before you put it in a show.
 >
 > This codebase was created with AI assistance, directed and reviewed by a human author.
@@ -39,7 +48,7 @@ after the take, at 64x.*
 
 ## Installing
 
-Every download carries one effect, **SW Instant**. Drop it into Resolume's effects folder and
+Every download has one effect in it, **SW Instant**. Drop it into Resolume's effects folder and
 restart Resolume:
 
 ```
@@ -47,13 +56,14 @@ macOS    ~/Documents/Resolume Arena/Extra Effects/
 Windows  %USERPROFILE%\Documents\Resolume Arena\Extra Effects\
 ```
 
-Avenue uses the same layout under its own folder name. The effect then appears in the effects
+Avenue uses the same layout under its own folder name. The effect then turns up in the effects
 browser as **SW Instant**.
 
 The macOS download is a universal build (Apple silicon and Intel), as a `.dmg` or a `.zip`.
-It is Developer ID-signed and notarised by the release pipeline after publication, so the bundle
-simply loads; if macOS refuses a download, it predates the signing — download it again. The Windows download is an x64 installer or a `.zip`. It is not code-signed, so the
-installer trips SmartScreen once: **More info** → **Run anyway**.
+It's Developer ID-signed and notarised by the release pipeline after publication, so the bundle
+just loads. If macOS refuses a download, it predates the signing, so download it again. The
+Windows download is an x64 installer or a `.zip`. It isn't code-signed, so the installer trips
+SmartScreen once: **More info** → **Run anyway**.
 
 ---
 
@@ -66,7 +76,7 @@ the image layer, each at its own rate, held back wherever silver developed, so t
 positive. A dark opacifier in the reagent shields the negative from light while this happens, and
 clears as a timing layer drops the pH, which also ends development.
 
-Instant runs exactly that, on the host's clock:
+Instant runs all of that, on the host's clock:
 
 | stage | what you see |
 | --- | --- |
@@ -79,9 +89,9 @@ Instant runs exactly that, on the host's clock:
 | too little paste, or paste dried with age | dark corners, where the reagent never reached |
 | dirt on a roller | a mark repeating at the roller's circumference |
 
-None of those is painted on. The colour drift, for one, is three time constants and nothing else:
-four minutes in at 24 °C a neutral grey reads density R 0.68, G 0.61, B 0.52, and it moves only
-toward neutral from then on.
+None of that is painted on. The colour drift, for one, is three time constants and nothing else:
+four minutes in at 24 °C a neutral grey reads density R 0.68, G 0.61, B 0.52, and from then on it
+only moves towards neutral.
 
 ---
 
@@ -118,14 +128,14 @@ is real time, and it runs geometrically to 256x (64x by default). At 24 °C:
 
 Cold film stops later, hot film sooner: see Temperature.
 
-Speed acts on a print that is developing, so you can take at 1x and speed it up half way; it
-changes nothing once development has stopped. The film's clock is the host's: pausing the
-composition pauses the print, which a real print would not do.
+Speed acts on a print that's developing, so you can take at 1x and speed it up half way; it
+changes nothing once development has stopped. The film's clock is the host's, so pausing the
+composition pauses the print, which a real print wouldn't do.
 
-**The bottom-first development cannot be seen.** The reagent front crosses the frame in one
+**You can't see the bottom-first development.** The reagent front crosses the frame in one
 film-second, and the picture takes about a minute to come through the opacifier, so the bottom of
 a print leads the top by a level or two at most, less than the frame's own shine. The harness
-measures the front row by row (to 5e-6 s); the eye cannot. The front's effect you *can* see is at
+measures the front row by row (to 5e-6 s), but your eye can't. Where you *can* see the front is at
 the far end of a short spread (Spread, below).
 
 ---
@@ -172,7 +182,7 @@ yellow-green), and its cast is as strong as v0.1.0's cyan one was. The order the
 in at 24 °C is unchanged: every factor is 1 there.
 
 Temperature is live for a developing print (a real print cares about the temperature it develops
-at, not the one it was exposed at), and changes nothing after the stop.
+at, not the one it was exposed at), and it changes nothing after the stop.
 
 **Expired** (0 to 1): old film. The paste has dried, so it reaches less far up the frame (up to 30%
 less), the dyes lose density (cyan most, so an old print goes pink), and the base stains toward
@@ -195,13 +205,14 @@ seconds. An interval shorter than the development time shows prints that never f
 
 **Exposure**, ±2 stops, default 0. **The camera meters.** At every take an averaging meter reads the
 image window's mean brightness and sets the exposure to bring it to photographic mid grey, within
-a range of −2 to +3 stops (a camera cannot lift a nearly black frame to grey). Exposure is the
+a range of −2 to +3 stops (a camera can't lift a nearly black frame to grey). Exposure is the
 lighten/darken wheel on top of what the meter chose. So a dark clip and a bright one print at a
 similar brightness, as they would in a camera. The meter is an averaging one: a small bright
 subject on black is metered as a dark scene and prints light and washed out; turn Exposure down.
 
-This meter was not in the plugin's first design. Resolume's demo clips are mostly CG on black, and
-at the clip's own levels every print came out nearly black. A camera would have metered.
+The meter wasn't in the plugin's first design. Resolume's demo clips are mostly CG on black, and
+at the clip's own levels every print came out nearly black. A camera would have metered, so now
+the plugin does too.
 
 ---
 
@@ -218,7 +229,7 @@ Expired shortens any spread further.
 
 **Dirty Roller** (0 to 1): dirt on one of the camera's rollers. Every time it comes round it takes
 up to 60% of the dye in a band across the print, so the mark repeats down the print at the
-roller's circumference (5/16 of the image height), and every repeat is the same mark, because it is
+roller's circumference (5/16 of the image height), and every repeat is the same mark, because it's
 the same dirt. It lightens.
 
 **Speed**: see Speed, above.
@@ -234,14 +245,14 @@ output is transparent (colour and alpha both 0), so the print floats over the la
 
 **Mix** (0 to 1): fades back to the clip, and to the clip's own alpha.
 
-A Border change moves the image window under a print already developing. It is not a resize and
-restarts nothing.
+A Border change moves the image window under a print that's already developing. It isn't a
+resize, and it restarts nothing.
 
 ---
 
 ## Where the numbers come from
 
-Said plainly, because most of them are choices.
+Most of these are choices rather than measurements, so here's where each one comes from.
 
 | number | value | status |
 | --- | --- | --- |
@@ -259,10 +270,10 @@ Said plainly, because most of them are choices.
 | meter | mid grey 0.18, −2 to +3 stops | the target is the photographic mid grey; the range is **assumed** |
 
 The 13 to 28 °C range and the casts are from the manufacturer's support page on temperature, read
-through the Internet Archive's copies of February 2023 and April 2026 (the live page refuses
-scripted readers). It gives no numbers; the cyan and magenta activation energies are fitted to its
-words (see Temperature). The development time of about ten to fifteen minutes is
-the manufacturer's figure as quoted by search results; it was not read at its source.
+through the Internet Archive's copies of February 2023 and April 2026 (the live page won't talk
+to scripted readers). It gives no numbers; the cyan and magenta activation energies are fitted to
+its words (see Temperature). The development time of about ten to fifteen minutes is the
+manufacturer's figure as quoted by search results; it wasn't read at its source.
 
 Nothing measures the casts that Temperature, Expired and Vintage produce against a real print.
 The harness measures the rates behind them, and checks the hue of Temperature's casts on a
@@ -287,7 +298,7 @@ Vintage casts, were judged by eye on Resolume's demo clips.
 
 Resolume's clock overflows a float, so all time is kept on the CPU in double, and the shaders see
 only the print's age at the frame's start and the frame's length. A frame longer than a quarter of
-a second is clamped, so a stalled host does not jump a print to the end. The print survives a
+a second is clamped, so a stalled host doesn't jump a print to the end. The print survives a
 change of resolution: its buffers are resampled, not cleared.
 
 ---
@@ -297,8 +308,8 @@ change of resolution: its buffers are resampled, not cleared.
 Measured by the offline harness on an M4 Max at the defaults, best of three, `glFinish` both
 sides, on a GPU shared with other work: 0.051 ms a frame at 1280 × 720, 0.071 at 1920 × 1080 and
 0.37 at 3840 × 2160 (2.2% of a 60 fps frame), holding 21, 47 and 190 MB (the capture and two dose
-buffers, 24 bytes a pixel). A take adds one capture pass and the meter. Nothing was timed inside
-Resolume, and nothing was timed on Windows.
+buffers, 24 bytes a pixel). A take adds one capture pass and the meter. I haven't timed anything
+inside Resolume, or on Windows.
 
 ---
 
@@ -308,25 +319,25 @@ Resolume, and nothing was timed on Windows.
 about a second; at 1x it takes a minute or two.
 
 **The print is black.** The frame was black when the print was taken. Many clips open on black, and
-the meter cannot lift black. In Continuous mode the next print comes an Interval later; in Take mode
+the meter can't lift black. In Continuous mode the next print comes an Interval later; in Take mode
 press Take again.
 
-**The print does not follow the clip.** It should not: a print is of the moment it was taken. Use
-Continuous mode, or press Take.
+**The print doesn't follow the clip.** It isn't meant to: a print is of the moment it was taken.
+Use Continuous mode, or press Take.
 
 **The print never finishes.** Interval is shorter than the development time at this Speed and
 Temperature. Raise Speed or Interval.
 
-**Everything outside the print is transparent.** That is the frame floating over the layer below.
+**Everything outside the print is transparent.** That's the frame floating over the layer below.
 Set Border to 0 for the process full-frame.
 
 **The top corners are dark.** Spread is Short or Uneven, or Expired is up.
 
-**SW Instant is not in the effects browser.** Check the folder under Installing, and that Resolume
+**SW Instant isn't in the effects browser.** Check the folder under Installing, and that Resolume
 was restarted.
 
-**The effect does nothing at all.** A shader that will not compile looks exactly like that, and the
-real message is in the log:
+**The effect does nothing at all.** A shader that won't compile looks just like that, and the
+actual error is in the log:
 
 ```
 macOS    ~/Library/Logs/instant/instant.YYYY-MM-DD.log
@@ -334,7 +345,7 @@ Windows  %LOCALAPPDATA%\instant\logs\instant.YYYY-MM-DD.log
 ```
 
 It records the GL vendor, renderer and version at load, which pass failed if one did, and the
-host's clock and the unit the plugin decided it is in.
+host's clock and the unit the plugin decided it's in.
 
 ---
 
@@ -343,14 +354,14 @@ host's clock and the unit the plugin decided it is in.
 - **The chemistry's numbers are mostly assumptions** (see Where the numbers come from). One is
   fitted to a chart for a different process, two to a manufacturer's description in words.
 - **Each dye absorbs only its own channel.** Real dyes have unwanted absorptions and spectral
-  curves; interimage effects are not modelled either.
+  curves; interimage effects aren't modelled either.
 - **The spread is a straight front** with a stated reach, not a fluid; the reagent trap at the top
-  of the print, flash, double exposure and light fogging a print ejected into the sun are not
+  of the print, flash, double exposure and light fogging a print ejected into the sun aren't
   modelled.
 - **Development ends sharply at the stop.** A real print goes on changing slightly for hours.
 - **The controls stay live after a take.** Film, Exposure, Expired, Spread and Dirty Roller change
-  the print that is developing, where physically only Temperature could. A VJ tool whose sliders
-  did nothing after a take would read as broken.
+  the print that's developing, where physically only Temperature could. A VJ tool whose sliders
+  did nothing after a take would look broken.
 - **Pausing the host pauses the print.**
 - **No check measures the stop time directly**, only what it causes.
 - **Never loaded into Resolume on macOS.** Everything numeric was compiled, rendered and measured
@@ -360,15 +371,15 @@ host's clock and the unit the plugin decided it is in.
 - **Only ever run on an Apple M4 Max**, although the macOS build contains an Intel slice. On
   Windows, see the note at the top of this guide.
 - **No presets and no OpenFX version.**
-- **There is a browser demo** at [instant-demo.stoatworks-labs.com](https://instant-demo.stoatworks-labs.com/).
-  It is a port to a web page, not the plugin: the shaders run in WebGL2, and the clock, the take
-  and the meter are rewritten in JavaScript. The page lists what it does not reproduce.
+- **There's a browser demo** at [instant-demo.stoatworks-labs.com](https://instant-demo.stoatworks-labs.com/).
+  It's a port to a web page rather than the plugin: the shaders run in WebGL2, and the clock, the
+  take and the meter are rewritten in JavaScript. The page lists what it doesn't reproduce.
 
 ---
 
 ## About
 
-The last group, **About**, carries the plugin's name, version, licence and maker, and buttons that
+The last group, **About**, has the plugin's name, version, licence and maker, and buttons that
 open this user guide ([stoatworks-labs.com/software/instant/guide/](https://stoatworks-labs.com/software/instant/guide/)),
 the project page, the source on GitHub and the support page in your browser.
 
@@ -378,5 +389,6 @@ instant film; product names above are used only to describe the kind of print it
 ## Reporting something
 
 [github.com/stoatworks-labs/instant/issues](https://github.com/stoatworks-labs/instant/issues).
-A screenshot, the Film, Exposure and Chemistry settings, and the composition's resolution and frame
-rate are usually enough. If the effect did nothing, attach the log.
+Shout there if something's wrong. A screenshot, the Film, Exposure and Chemistry settings, and the
+composition's resolution and frame rate are usually enough for me to go on. If the effect did
+nothing, attach the log.
