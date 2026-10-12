@@ -81,7 +81,7 @@ None of this is painted on. Each one is a stage of the print doing what it does:
 - **The picture arrives blue-cyan and warms.** Each dye layer approaches its final
   density first-order, cyan with a time constant of 70 s, magenta 120 s, yellow
   200 s (the harness fits each one back out of a flat patch without knowing the
-  asymptote). Four minutes in, a neutral grey reads density R 0.67, G 0.60, B 0.51.
+  asymptote). Four minutes in, a neutral grey reads density R 0.68, G 0.61, B 0.52.
 - **The dark green-grey start** is the opacifier, clearing with its own time constant.
 - **Temperature changes the picture, not only the speed.** Every rate follows the
   Arrhenius law, and each dye layer has its own activation energy. The timing layer

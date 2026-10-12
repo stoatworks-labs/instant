@@ -306,10 +306,11 @@ change of resolution: its buffers are resampled, not cleared.
 ## Performance
 
 Measured by the offline harness on an M4 Max at the defaults, best of three, `glFinish` both
-sides, on a GPU shared with other work: 0.051 ms a frame at 1280 × 720, 0.071 at 1920 × 1080 and
-0.37 at 3840 × 2160 (2.2% of a 60 fps frame), holding 21, 47 and 190 MB (the capture and two dose
-buffers, 24 bytes a pixel). A take adds one capture pass and the meter. I haven't timed anything
-inside Resolume, or on Windows.
+sides, on a GPU shared with other work: 0.089 ms a frame at 1280 × 720, 0.164 at 1920 × 1080 and
+0.635 at 3840 × 2160 (3.8% of a 60 fps frame), holding 35, 79 and 316 MB (the capture and two dose
+buffers, 40 bytes a pixel). Those are v0.1.1's figures. v0.1.0 measured 0.051, 0.071 and 0.37 ms,
+holding 21, 47 and 190 MB at 24 bytes a pixel, on a quieter GPU. A take adds one capture pass and
+the meter. I haven't timed anything inside Resolume, or on Windows.
 
 ---
 
