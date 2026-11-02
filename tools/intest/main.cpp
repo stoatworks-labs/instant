@@ -1678,10 +1678,10 @@ int runBench( Instant& plugin, int frames, double fps )
 		             ms / 16.667 * 100.0, static_cast< double >( bytes ) / 1048576.0 );
 	}
 	std::printf( "\nState is three picture-sized buffers at 8 bytes a texel: the capture (RGBA16F)\n"
-	             "and both halves of the development state (RGBA32F), colour textures only. The\n"
-	             "SDK's FBO attaches a depth renderbuffer to each that the plugin never uses and\n"
-	             "this does not count. Whatever the settings above were, they are what was\n"
-	             "measured; --set measures another. A take costs one capture pass more.\n" );
+	             "and both halves of the development state (RGBA32F): colour textures, which is\n"
+	             "all of it, as the buffers have no depth attachment. Whatever the settings above\n"
+	             "were, they are what was measured; --set measures another. A take costs one\n"
+	             "capture pass more.\n" );
 	return 0;
 }
 

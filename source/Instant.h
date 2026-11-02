@@ -62,9 +62,8 @@ public:
 	void SetProbeForTest( int probe );
 
 	/// Bytes of GPU state held across frames right now: the capture and both
-	/// halves of the development state, colour textures only. The SDK's FBO
-	/// also attaches a depth renderbuffer to each, which this does not count
-	/// and the plugin never uses.
+	/// halves of the development state. That is all of it: the colour
+	/// textures, as `PassBuffer` attaches no depth buffer.
 	size_t StateBytesForTest() const;
 
 	/// The print's age in film-seconds, and how many takes there have been.
